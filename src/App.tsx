@@ -1,9 +1,55 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ExpertiseLevel, MicrositeData } from './types';
 import { LEVELS, PRESET_TOPICS, buildPresetMicrosite } from './data/presets';
 import { InteractiveIllustration } from './components/InteractiveIllustration';
 import { DynamicWidget } from './components/DynamicWidget';
-import { Loader2, ArrowRight } from 'lucide-react';
+import { Loader2, ArrowRight, ChevronDown } from 'lucide-react';
+
+interface ExampleTopicItem {
+  label: string;
+  topic: string;
+  category: string;
+  presetSlug?: string;
+}
+
+const EXAMPLE_TOPICS: ExampleTopicItem[] = [
+  ...PRESET_TOPICS.map((p) => ({
+    label: p.label,
+    topic: p.base.topic,
+    category: p.category,
+    presetSlug: p.slug,
+  })),
+  {
+    label: 'Marie Curie',
+    topic: 'Marie Curie',
+    category: 'Biography & Physics',
+  },
+  {
+    label: 'CRISPR-Cas9',
+    topic: 'CRISPR-Cas9 Gene Editing',
+    category: 'Molecular Biology',
+  },
+  {
+    label: 'Fourier Transform',
+    topic: 'Fourier Transform',
+    category: 'Mathematics & Signal Processing',
+  },
+  {
+    label: 'Black-Scholes Formula',
+    topic: 'Black-Scholes Option Pricing Formula',
+    category: 'Quantitative Finance',
+  },
+  {
+    label: 'General Relativity',
+    topic: 'Einstein General Relativity',
+    category: 'Theoretical Physics',
+  },
+  {
+    label: 'Zero-Knowledge Proofs',
+    topic: 'Zero-Knowledge Proofs',
+    category: 'Cryptography',
+  },
+];
 
 export function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -51,10 +97,45 @@ export function App() {
   const [selectedQuizOption, setSelectedQuizOption] = useState<number | null>(
     null
   );
+  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
+  const queryContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setSelectedQuizOption(null);
   }, [microsite.topic, microsite.level]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        queryContainerRef.current &&
+        !queryContainerRef.current.contains(e.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  const filteredExamples = React.useMemo(() => {
+    const q = queryInput.trim().toLowerCase();
+    if (!q) return EXAMPLE_TOPICS;
+    return EXAMPLE_TOPICS.filter(
+      (item) =>
+        item.label.toLowerCase().includes(q) ||
+        item.topic.toLowerCase().includes(q) ||
+        item.category.toLowerCase().includes(q)
+    );
+  }, [queryInput]);
 
   const currentLevelMeta =
     LEVELS.find((l) => l.id === level) || LEVELS[1];
@@ -164,12 +245,14 @@ export function App() {
     e.preventDefault();
     const trimmed = queryInput.trim();
     if (!trimmed || isLoading) return;
+    setIsDropdownOpen(false);
     setActiveTopicQuery(trimmed);
     generateMicrosite(trimmed, level);
   };
 
   const handleSelectTopic = (topicText: string, presetSlug?: string) => {
     setQueryInput('');
+    setIsDropdownOpen(false);
     setActiveTopicQuery(topicText);
     if (presetSlug) {
       const built = buildPresetMicrosite(presetSlug, level);
@@ -243,46 +326,193 @@ export function App() {
         className="border-b"
         style={{ borderColor: 'var(--rule)' }}
       >
-        <div className="max-w-6xl mx-auto px-5 sm:px-8 py-6 space-y-4">
+        <div className="max-w-6xl mx-auto px-5 sm:px-8 py-6 space-y-3">
           <form
             onSubmit={handleSearchSubmit}
             className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch"
           >
-            {/* 1. Query Bar */}
-            <div
-              className="lg:col-span-7 flex items-center rounded-full px-4 py-1.5"
-              style={{
-                backgroundColor: 'var(--paper-2)',
-                border: '1px solid var(--rule)',
-              }}
-            >
-              <input
-                type="text"
-                value={queryInput}
-                onChange={(e) => setQueryInput(e.target.value)}
-                placeholder="What would you like to learn? Type any topic, theorem, system, or person…"
-                aria-label="Topic or person query"
-                className="w-full bg-transparent text-sm sm:text-base focus:outline-none"
-                style={{ color: 'var(--ink)' }}
-              />
-              <button
-                type="submit"
-                disabled={isLoading || !queryInput.trim()}
-                className="ml-2 shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-semibold text-xs sm:text-sm disabled:opacity-50 cursor-pointer"
+            {/* 1. Query Bar with Pre-populated Examples Dropdown */}
+            <div ref={queryContainerRef} className="relative lg:col-span-7">
+              <div
+                className="flex items-center rounded-full px-4 py-1.5 h-full"
                 style={{
-                  backgroundColor: 'var(--ink)',
-                  color: 'var(--paper)',
+                  backgroundColor: 'var(--paper-2)',
+                  border: isDropdownOpen
+                    ? '1px solid var(--ink-3)'
+                    : '1px solid var(--rule)',
                 }}
               >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Synthesizing…</span>
-                  </>
-                ) : (
-                  <span>Explore</span>
-                )}
-              </button>
+                <input
+                  type="text"
+                  value={queryInput}
+                  onFocus={() => setIsDropdownOpen(true)}
+                  onChange={(e) => {
+                    setQueryInput(e.target.value);
+                    setIsDropdownOpen(true);
+                  }}
+                  placeholder="What would you like to learn? Type any topic, theorem, system, or person…"
+                  aria-label="Topic or person query"
+                  aria-expanded={isDropdownOpen}
+                  aria-controls="learnx-examples-dropdown"
+                  className="w-full bg-transparent text-sm sm:text-base focus:outline-none"
+                  style={{ color: 'var(--ink)' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsDropdownOpen((open) => !open)}
+                  aria-label="Toggle example topics menu"
+                  title="Browse example topics"
+                  className="ml-1 p-1.5 rounded-full cursor-pointer transition"
+                  style={{ color: 'var(--ink-3)' }}
+                >
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform ${
+                      isDropdownOpen ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading || !queryInput.trim()}
+                  className="ml-1.5 shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-semibold text-xs sm:text-sm disabled:opacity-50 cursor-pointer"
+                  style={{
+                    backgroundColor: 'var(--ink)',
+                    color: 'var(--paper)',
+                  }}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Synthesizing…</span>
+                    </>
+                  ) : (
+                    <span>Explore</span>
+                  )}
+                </button>
+              </div>
+
+              {/* Pre-populated Examples Dropdown Menu */}
+              {isDropdownOpen && (
+                <div
+                  id="learnx-examples-dropdown"
+                  role="listbox"
+                  className="absolute left-0 right-0 top-full mt-2 z-40 surface-card shadow-xl overflow-hidden"
+                  style={{
+                    backgroundColor: 'var(--paper)',
+                    borderColor: 'var(--rule)',
+                  }}
+                >
+                  <div
+                    className="px-4 py-2 border-b flex items-center justify-between"
+                    style={{
+                      backgroundColor: 'var(--paper-2)',
+                      borderColor: 'var(--rule)',
+                    }}
+                  >
+                    <span className="kicker">
+                      {queryInput.trim()
+                        ? 'Matching Examples'
+                        : 'Example Topics & Interactive Editions'}
+                    </span>
+                    <span
+                      className="text-[11px]"
+                      style={{ color: 'var(--ink-3)' }}
+                    >
+                      Select an example or press Enter to synthesize
+                    </span>
+                  </div>
+
+                  <div className="max-h-72 overflow-y-auto divide-y" style={{ borderColor: 'var(--rule)' }}>
+                    {queryInput.trim() && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const trimmed = queryInput.trim();
+                          setIsDropdownOpen(false);
+                          setActiveTopicQuery(trimmed);
+                          generateMicrosite(trimmed, level);
+                        }}
+                        className="w-full text-left px-4 py-2.5 flex items-center justify-between gap-3 cursor-pointer transition"
+                        style={{
+                          backgroundColor: 'var(--accent-soft)',
+                          color: 'var(--accent)',
+                        }}
+                      >
+                        <span className="text-xs sm:text-sm font-semibold">
+                          Explore “{queryInput.trim()}” ({currentLevelMeta.label} edition)
+                        </span>
+                        <ArrowRight className="w-3.5 h-3.5 shrink-0" />
+                      </button>
+                    )}
+
+                    {filteredExamples.map((item) => {
+                      const isCurrent =
+                        (item.presetSlug &&
+                          activePresetSlug === item.presetSlug) ||
+                        (!item.presetSlug &&
+                          activeTopicQuery.toLowerCase() ===
+                            item.topic.toLowerCase());
+                      return (
+                        <button
+                          key={item.label}
+                          type="button"
+                          role="option"
+                          aria-selected={Boolean(isCurrent)}
+                          onClick={() =>
+                            handleSelectTopic(item.topic, item.presetSlug)
+                          }
+                          className="w-full text-left px-4 py-2.5 flex items-center justify-between gap-3 cursor-pointer transition hover:opacity-80"
+                          style={{
+                            backgroundColor: isCurrent
+                              ? 'var(--paper-2)'
+                              : 'var(--paper)',
+                            borderColor: 'var(--rule)',
+                          }}
+                        >
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="text-sm font-medium truncate"
+                                style={{ color: 'var(--ink)' }}
+                              >
+                                {item.label}
+                              </span>
+                              {isCurrent && (
+                                <span
+                                  className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded font-semibold"
+                                  style={{
+                                    backgroundColor: 'var(--accent-soft)',
+                                    color: 'var(--accent)',
+                                  }}
+                                >
+                                  Active
+                                </span>
+                              )}
+                            </div>
+                            <div
+                              className="text-xs truncate"
+                              style={{ color: 'var(--ink-3)' }}
+                            >
+                              {item.topic}
+                            </div>
+                          </div>
+
+                          <span
+                            className="text-[11px] px-2.5 py-0.5 rounded-full shrink-0"
+                            style={{
+                              backgroundColor: 'var(--paper-2)',
+                              border: '1px solid var(--rule)',
+                              color: 'var(--ink-3)',
+                            }}
+                          >
+                            {item.category}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* 2. Novice-to-Pro Toggle right next to Query */}
@@ -329,61 +559,8 @@ export function App() {
             </div>
           </form>
 
-          {/* Topic Pills & Calibration Tagline */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-0.5">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="kicker mr-1">Index:</span>
-              {PRESET_TOPICS.map((preset) => {
-                const isSelected = activePresetSlug === preset.slug;
-                return (
-                  <button
-                    key={preset.slug}
-                    type="button"
-                    onClick={() =>
-                      handleSelectTopic(preset.base.topic, preset.slug)
-                    }
-                    className="text-xs px-3 py-1 rounded-full cursor-pointer transition"
-                    style={
-                      isSelected
-                        ? {
-                            backgroundColor: 'var(--accent-soft)',
-                            color: 'var(--accent)',
-                            border: '1px solid var(--accent)',
-                            fontWeight: 600,
-                          }
-                        : {
-                            backgroundColor: 'var(--paper-2)',
-                            color: 'var(--ink-2)',
-                            border: '1px solid var(--rule)',
-                          }
-                    }
-                  >
-                    {preset.label}
-                  </button>
-                );
-              })}
-              {[
-                'Marie Curie',
-                'CRISPR-Cas9',
-                'Fourier Transform',
-                'Black-Scholes Formula',
-              ].map((sample) => (
-                <button
-                  key={sample}
-                  type="button"
-                  onClick={() => handleSelectTopic(sample)}
-                  className="text-xs px-2.5 py-1 rounded-full cursor-pointer transition"
-                  style={{
-                    backgroundColor: 'transparent',
-                    border: '1px dashed var(--rule)',
-                    color: 'var(--ink-3)',
-                  }}
-                >
-                  {sample}
-                </button>
-              ))}
-            </div>
-
+          {/* Calibration Tagline */}
+          <div className="flex items-center justify-end pt-0.5">
             <div className="text-xs" style={{ color: 'var(--ink-3)' }}>
               <strong style={{ color: 'var(--ink-2)' }}>
                 {currentLevelMeta.badge}:
