@@ -1,13 +1,32 @@
 #!/usr/bin/env node
 import http from 'node:http';
-import dns from 'node:dns';
+import https from 'node:https';
+import net from 'node:net';
 
-dns.setDefaultResultOrder('ipv4first');
+// Enable Happy Eyeballs fast multi-IP fallback so a single slow IP never causes UND_ERR_CONNECT_TIMEOUT
+if (typeof net.setDefaultAutoSelectFamily === 'function') {
+  net.setDefaultAutoSelectFamily(true);
+}
+if (typeof net.setDefaultAutoSelectFamilyAttemptTimeout === 'function') {
+  net.setDefaultAutoSelectFamilyAttemptTimeout(400);
+}
+
+const httpsAgent = new https.Agent({
+  keepAlive: true,
+  maxSockets: 32,
+  timeout: 30000,
+  autoSelectFamily: true,
+  autoSelectFamilyAttemptTimeout: 400,
+});
 
 const PORT = Number(process.env.LEARNX_PORT || 8792);
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const PRIMARY_MODEL = process.env.LEARNX_MODEL || 'gemini-3.8-flash';
-const FALLBACK_MODEL = 'gemini-4-argon';
+const FALLBACK_MODEL = 'gemini-3.5-flash-lite';
+
+// In-memory LRU-style cache on the server so repeated queries or level switches are instant
+const RESPONSE_CACHE = new Map();
+const MAX_CACHE_ENTRIES = 200;
 
 const LEVEL_INSTRUCTIONS = {
   novice: `TARGET LEVEL: NOVICE (L1 - Intuitive & Visual).
@@ -25,19 +44,17 @@ const LEVEL_INSTRUCTIONS = {
 - Use rigorous formal definitions, mathematical/theoretical bounds, subtle edge cases, failure modes, and state-of-the-art research frontiers.`,
 };
 
-const SYSTEM_INSTRUCTION = `You are LearnX, an interactive educational microsite synthesizer.
-Given ANY user query (a scientific concept, mathematical theorem, technology, historical event, philosophical idea, or known person/biography) and an expertise level (novice, intermediate, advanced, or pro), generate a complete, factually grounded interactive learning microsite in JSON.
+const SYSTEM_INSTRUCTION = `You are LearnX, a fast, rigorous interactive educational microsite synthesizer.
+Given ANY user query (a scientific concept, mathematical theorem, technology, historical event, philosophical idea, or known person/biography) and an expertise level (novice, intermediate, advanced, or pro), generate a complete, factually accurate interactive learning microsite in JSON.
 
-Use Google Search when helpful to ground biographical dates, empirical metrics, and primary references.
-
-Rules for visual & interactive components:
+Keep all strings crisp, dense, and high-signal so generation is fast:
 1. "illustration":
-   - Create 4 or 5 inspectable nodes positioned nicely across the canvas (x in [15, 85], y in [20, 80], well-spaced so they do not overlap) with ids "n1", "n2", "n3", "n4" (and optionally "n5").
+   - Create 4 inspectable nodes positioned across the canvas (x in [18, 82], y in [22, 78], well-spaced) with ids "n1", "n2", "n3", "n4".
    - Connect them logically in "connections" using those exact node ids ("from", "to", "label").
    - Pick visualTheme from: "orbital", "network", "wave", "portrait-constellation", "architecture", "equilibrium".
 2. "widget":
-   - If the query is primarily about a KNOWN PERSON, BIOGRAPHY, or HISTORICAL EVENT/ERA, set widgetType="timeline" and populate "events" with 5 chronological milestones (year, title, summary, impactScore 40..100, deeperInsight, domainTag).
-   - Otherwise, prefer widgetType="simulation" and populate "parameters" with 3 interactive sliders (id, label, unit, min, max, step, defaultValue, description), plus formulaType ("resonance-peak", "harmonic-wave", "saturation-logistic", "exponential-growth", or "inverse-power"), xAxisLabel, yAxisLabel, outputMetricLabel, outputMetricUnit, and regimeThresholds.
+   - If the query is primarily about a KNOWN PERSON, BIOGRAPHY, or HISTORICAL EVENT/ERA, set widgetType="timeline" and populate "events" with 5 chronological milestones (year, title, summary, impactScore 50..100, deeperInsight, domainTag), and leave "parameters" as [].
+   - Otherwise, set widgetType="simulation", populate "parameters" with 3 interactive sliders (id, label, unit, min, max, step, defaultValue, description), set formulaType ("resonance-peak", "harmonic-wave", "saturation-logistic", "exponential-growth", or "inverse-power"), and leave "events" as [].
 3. Calibrate ALL text (subtitle, levelCalibrationNote, tldr, mentalModelOrFormalism, sections, and quiz) strictly to the requested expertise level (novice, intermediate, advanced, or pro).`;
 
 const RESPONSE_SCHEMA = {
@@ -255,39 +272,87 @@ const RESPONSE_SCHEMA = {
   ],
 };
 
-async function callGeminiInteraction(modelName, userInput, timeoutMs = 35000) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const resp = await fetch(
-      'https://generativelanguage.googleapis.com/v1/interactions',
+function postJsonHttps(urlString, headers, payloadObj, timeoutMs = 28000) {
+  return new Promise((resolve, reject) => {
+    const url = new URL(urlString);
+    const bodyStr = JSON.stringify(payloadObj);
+
+    const req = https.request(
       {
+        hostname: url.hostname,
+        port: 443,
+        path: url.pathname + url.search,
         method: 'POST',
+        agent: httpsAgent,
         headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': GEMINI_API_KEY,
+          ...headers,
+          'Content-Length': Buffer.byteLength(bodyStr),
         },
-        body: JSON.stringify({
-          model: modelName,
-          store: false,
-          generation_config: {
-            thinking_level: 'low',
-          },
-          tools: [{ type: 'google_search' }],
-          system_instruction: SYSTEM_INSTRUCTION,
-          input: userInput,
-          response_format: RESPONSE_SCHEMA,
-        }),
-        signal: controller.signal,
+        timeout: timeoutMs,
+      },
+      (res) => {
+        const chunks = [];
+        res.on('data', (chunk) => chunks.push(chunk));
+        res.on('end', () => {
+          const text = Buffer.concat(chunks).toString('utf8');
+          if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+            try {
+              resolve(JSON.parse(text));
+            } catch (parseErr) {
+              reject(new Error(`Invalid JSON from upstream: ${parseErr.message}`));
+            }
+          } else {
+            reject(
+              new Error(`HTTP ${res.statusCode}: ${text.slice(0, 240)}`)
+            );
+          }
+        });
       }
     );
-    if (!resp.ok) {
-      const errText = await resp.text();
-      throw new Error(`HTTP ${resp.status}: ${errText.slice(0, 240)}`);
-    }
-    return await resp.json();
-  } finally {
-    clearTimeout(timer);
+
+    req.on('timeout', () => {
+      req.destroy(new Error(`Request timed out after ${timeoutMs}ms`));
+    });
+    req.on('error', (err) => reject(err));
+    req.write(bodyStr);
+    req.end();
+  });
+}
+
+async function callGeminiInteraction(modelName, userInput, timeoutMs = 25000) {
+  const payload = {
+    model: modelName,
+    store: false,
+    generation_config: {
+      thinking_level: 'low',
+    },
+    system_instruction: SYSTEM_INSTRUCTION,
+    input: userInput,
+    response_format: RESPONSE_SCHEMA,
+  };
+
+  // Retry once automatically on any transient socket/connect error
+  try {
+    return await postJsonHttps(
+      'https://generativelanguage.googleapis.com/v1/interactions',
+      {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': GEMINI_API_KEY,
+      },
+      payload,
+      timeoutMs
+    );
+  } catch (err) {
+    console.warn(`Attempt 1 with ${modelName} failed (${err.message}), retrying...`);
+    return await postJsonHttps(
+      'https://generativelanguage.googleapis.com/v1/interactions',
+      {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': GEMINI_API_KEY,
+      },
+      payload,
+      timeoutMs
+    );
   }
 }
 
@@ -310,6 +375,7 @@ const server = http.createServer(async (req, res) => {
         service: 'learnx-api',
         model: PRIMARY_MODEL,
         fallbackModel: FALLBACK_MODEL,
+        cachedEntries: RESPONSE_CACHE.size,
         hasKey: Boolean(GEMINI_API_KEY),
       })
     );
@@ -344,6 +410,13 @@ const server = http.createServer(async (req, res) => {
           return;
         }
 
+        const cacheKey = `${query.toLowerCase()}::${level}`;
+        if (RESPONSE_CACHE.has(cacheKey)) {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(RESPONSE_CACHE.get(cacheKey)));
+          return;
+        }
+
         if (!GEMINI_API_KEY) {
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(
@@ -360,12 +433,11 @@ Selected Expertise Level: ${level.toUpperCase()}
 
 ${levelGuide}
 
-Generate the complete interactive microsite JSON for "${query}" calibrated specifically for ${level.toUpperCase()} level.
-Ensure:
-- 3 crisp, high-signal article sections in "sections"
+Generate the interactive microsite JSON for "${query}" calibrated for ${level.toUpperCase()} level:
+- 3 concise article sections (2-3 sentences per section)
 - 4 keyFacts cards
-- 4 or 5 well-spaced nodes in "illustration.nodes" (x between 16 and 84, y between 22 and 78) with matching "illustration.connections"
-- Both "widget.parameters" (3 realistic sliders with min < defaultValue < max and step > 0) AND "widget.events" (4-5 milestones) populated so the user can interact with the simulation or timeline seamlessly.`;
+- 4 inspectable nodes in "illustration.nodes" (ids "n1".."n4", x in 18..82, y in 22..78) and 3-4 "illustration.connections"
+- If "${query}" is a person or historical event, set widgetType="timeline" with 5 events (and parameters=[]). Otherwise set widgetType="simulation" with 3 realistic parameter sliders (and events=[]).`;
 
         let interaction;
         let usedModel = PRIMARY_MODEL;
@@ -373,17 +445,17 @@ Ensure:
           interaction = await callGeminiInteraction(
             PRIMARY_MODEL,
             userInput,
-            32000
+            24000
           );
         } catch (primaryErr) {
           console.warn(
-            `Primary model (${PRIMARY_MODEL}) failed (${primaryErr.message}), retrying with ${FALLBACK_MODEL}...`
+            `Primary model (${PRIMARY_MODEL}) failed (${primaryErr.message}), falling back to ${FALLBACK_MODEL}...`
           );
           usedModel = FALLBACK_MODEL;
           interaction = await callGeminiInteraction(
             FALLBACK_MODEL,
             userInput,
-            32000
+            22000
           );
         }
 
@@ -419,17 +491,65 @@ Ensure:
           resultObj.entityType = 'concept';
         }
 
-        // Normalize widgetType
+        // Ensure widget fallback safety
+        if (!resultObj.widget) {
+          resultObj.widget = {
+            widgetType: 'simulation',
+            title: `${resultObj.topic || query} Interactive Model`,
+            subtitle: 'Explore key parameters',
+            explanation: 'Adjust parameters to observe the system response.',
+            formulaType: 'resonance-peak',
+            parameters: [],
+            events: [],
+          };
+        }
+
         if (
-          resultObj.entityType === 'person' &&
-          Array.isArray(resultObj.widget?.events) &&
-          resultObj.widget.events.length >= 3
+          (resultObj.entityType === 'person' ||
+            resultObj.widget.widgetType === 'timeline') &&
+          Array.isArray(resultObj.widget.events) &&
+          resultObj.widget.events.length >= 2
         ) {
           resultObj.widget.widgetType = 'timeline';
-        } else if (
-          !['simulation', 'timeline'].includes(resultObj.widget?.widgetType)
-        ) {
+        } else {
           resultObj.widget.widgetType = 'simulation';
+          if (
+            !Array.isArray(resultObj.widget.parameters) ||
+            resultObj.widget.parameters.length === 0
+          ) {
+            resultObj.widget.parameters = [
+              {
+                id: 'p1',
+                label: 'Primary Drive Intensity',
+                unit: '%',
+                min: 0,
+                max: 100,
+                step: 5,
+                defaultValue: 50,
+                description: 'Primary control variable driving system response.',
+              },
+              {
+                id: 'p2',
+                label: 'Coupling / Efficiency Factor',
+                unit: '%',
+                min: 10,
+                max: 100,
+                step: 5,
+                defaultValue: 75,
+                description: 'Coupling strength across interacting stages.',
+              },
+              {
+                id: 'p3',
+                label: 'Damping / Constraint Threshold',
+                unit: '%',
+                min: 0,
+                max: 100,
+                step: 5,
+                defaultValue: 30,
+                description: 'Dissipative or boundary constraint parameter.',
+              },
+            ];
+          }
         }
 
         // Build clean search URLs for grounded sources
@@ -449,6 +569,12 @@ Ensure:
         } else {
           resultObj.sources = [];
         }
+
+        if (RESPONSE_CACHE.size >= MAX_CACHE_ENTRIES) {
+          const oldestKey = RESPONSE_CACHE.keys().next().value;
+          if (oldestKey) RESPONSE_CACHE.delete(oldestKey);
+        }
+        RESPONSE_CACHE.set(cacheKey, resultObj);
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(resultObj));

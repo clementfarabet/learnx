@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MicrositeIllustration, IllustrationNode } from '../types';
 import { Sparkles, Eye, Layers } from 'lucide-react';
 
@@ -25,7 +25,7 @@ const GROUP_STYLES: Record<
   },
   output: {
     ring: 'border-amber-400/70 bg-amber-950/85 text-amber-100',
-    badge: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+    badge: 'bg-amber-500/20 text-amber-300 border-indigo-500/30',
     dot: '#f59e0b',
     label: 'Outcome / Synthesis',
   },
@@ -41,15 +41,22 @@ export const InteractiveIllustration: React.FC<Props> = ({
   illustration,
   accentColor,
 }) => {
-  const nodes = illustration.nodes || [];
+  const nodes = Array.isArray(illustration?.nodes) ? illustration.nodes : [];
   const [selectedId, setSelectedId] = useState<string>(nodes[0]?.id || '');
   const [showCustomSvg, setShowCustomSvg] = useState<boolean>(false);
+
+  useEffect(() => {
+    setSelectedId(nodes[0]?.id || '');
+    setShowCustomSvg(false);
+  }, [illustration]);
 
   const activeNode =
     nodes.find((n) => n.id === selectedId) || nodes[0] || null;
 
   const nodeMap = new Map<string, IllustrationNode>();
-  nodes.forEach((n) => nodeMap.set(n.id, n));
+  nodes.forEach((n) => {
+    if (n && n.id) nodeMap.set(n.id, n);
+  });
 
   return (
     <div className="rounded-2xl border border-white/10 bg-[#101420]/90 overflow-hidden shadow-2xl">
@@ -72,12 +79,12 @@ export const InteractiveIllustration: React.FC<Props> = ({
               </span>
             </div>
             <h3 className="text-sm font-semibold text-white">
-              {illustration.title}
+              {illustration?.title || 'Concept Architecture Map'}
             </h3>
           </div>
         </div>
 
-        {illustration.svgCode && (
+        {illustration?.svgCode && (
           <button
             type="button"
             onClick={() => setShowCustomSvg((v) => !v)}
@@ -91,7 +98,6 @@ export const InteractiveIllustration: React.FC<Props> = ({
 
       {/* Canvas Area */}
       <div className="relative h-[300px] sm:h-[320px] w-full bg-gradient-to-b from-[#0b0e17] via-[#101626] to-[#0c101b] overflow-hidden select-none">
-        {/* Subtle decorative background geometry based on visualTheme */}
         <svg
           viewBox="0 0 800 320"
           className="absolute inset-0 w-full h-full pointer-events-none"
@@ -132,7 +138,7 @@ export const InteractiveIllustration: React.FC<Props> = ({
           <rect width="800" height="320" fill="url(#illGrid)" />
           <ellipse cx="400" cy="160" rx="340" ry="145" fill="url(#illGlow)" />
 
-          {illustration.visualTheme === 'orbital' && (
+          {illustration?.visualTheme === 'orbital' && (
             <g stroke="rgba(255,255,255,0.07)" fill="none">
               <ellipse cx="400" cy="160" rx="260" ry="110" strokeDasharray="4 6" />
               <ellipse cx="400" cy="160" rx="165" ry="70" />
@@ -140,7 +146,7 @@ export const InteractiveIllustration: React.FC<Props> = ({
             </g>
           )}
 
-          {illustration.visualTheme === 'portrait-constellation' && (
+          {illustration?.visualTheme === 'portrait-constellation' && (
             <g stroke="rgba(245,158,11,0.12)" fill="none">
               <circle cx="400" cy="160" r="125" strokeDasharray="3 5" />
               <circle cx="400" cy="160" r="85" />
@@ -148,7 +154,7 @@ export const InteractiveIllustration: React.FC<Props> = ({
             </g>
           )}
 
-          {illustration.visualTheme === 'equilibrium' && (
+          {illustration?.visualTheme === 'equilibrium' && (
             <g stroke="rgba(16,185,129,0.1)" fill="none">
               <path d="M 90 250 Q 400 50 710 250" strokeWidth="1.5" strokeDasharray="6 6" />
               <path d="M 90 70 Q 400 270 710 70" strokeWidth="1.5" strokeDasharray="6 6" />
@@ -157,15 +163,20 @@ export const InteractiveIllustration: React.FC<Props> = ({
 
           {/* Connection lines between nodes */}
           {!showCustomSvg &&
-            (illustration.connections || []).map((conn, idx) => {
+            (illustration?.connections || []).map((conn, idx) => {
               const fromNode = nodeMap.get(conn.from);
               const toNode = nodeMap.get(conn.to);
               if (!fromNode || !toNode) return null;
 
-              const x1 = (fromNode.x / 100) * 800;
-              const y1 = (fromNode.y / 100) * 320;
-              const x2 = (toNode.x / 100) * 800;
-              const y2 = (toNode.y / 100) * 320;
+              const fx = Number.isFinite(Number(fromNode.x)) ? Number(fromNode.x) : 25;
+              const fy = Number.isFinite(Number(fromNode.y)) ? Number(fromNode.y) : 50;
+              const tx = Number.isFinite(Number(toNode.x)) ? Number(toNode.x) : 75;
+              const ty = Number.isFinite(Number(toNode.y)) ? Number(toNode.y) : 50;
+
+              const x1 = (fx / 100) * 800;
+              const y1 = (fy / 100) * 320;
+              const x2 = (tx / 100) * 800;
+              const y2 = (ty / 100) * 320;
               const mx = (x1 + x2) / 2;
               const my = (y1 + y2) / 2 - 14;
               const isHighlighted =
@@ -202,24 +213,31 @@ export const InteractiveIllustration: React.FC<Props> = ({
             })}
         </svg>
 
-        {showCustomSvg && illustration.svgCode ? (
+        {showCustomSvg && illustration?.svgCode ? (
           <div
             className="relative z-10 w-full h-full flex items-center justify-center p-4"
             dangerouslySetInnerHTML={{ __html: illustration.svgCode }}
           />
         ) : (
-          /* Interactive Positioned Nodes */
           <div className="relative z-10 w-full h-full">
             {nodes.map((node, index) => {
               const isSelected = activeNode?.id === node.id;
               const groupStyle =
                 GROUP_STYLES[node.group] || GROUP_STYLES.core;
-              const clampedX = Math.max(14, Math.min(86, node.x));
-              const clampedY = Math.max(18, Math.min(82, node.y));
+              const fallbackX = 20 + ((index * 22) % 65);
+              const fallbackY = index % 2 === 0 ? 32 : 68;
+              const rawX = Number.isFinite(Number(node.x))
+                ? Number(node.x)
+                : fallbackX;
+              const rawY = Number.isFinite(Number(node.y))
+                ? Number(node.y)
+                : fallbackY;
+              const clampedX = Math.max(14, Math.min(86, rawX));
+              const clampedY = Math.max(18, Math.min(82, rawY));
 
               return (
                 <button
-                  key={node.id}
+                  key={node.id || index}
                   type="button"
                   onClick={() => setSelectedId(node.id)}
                   style={{

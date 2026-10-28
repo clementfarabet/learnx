@@ -68,10 +68,13 @@ export function App() {
     const q = raw.trim().toLowerCase();
     if (!q) return null;
     for (const p of PRESET_TOPICS) {
+      const slugWords = p.slug.replace(/-/g, ' ');
       if (
         p.slug === q ||
+        slugWords === q ||
         p.label.toLowerCase() === q ||
-        p.base.topic.toLowerCase() === q
+        p.base.topic.toLowerCase() === q ||
+        p.base.topic.toLowerCase().startsWith(q)
       ) {
         return p.slug;
       }
@@ -491,7 +494,7 @@ export function App() {
 
             {/* Structured Article Sections */}
             <article className="rounded-2xl border border-white/10 bg-[#101420]/80 p-6 space-y-6 shadow-xl">
-              {microsite.sections.map((sec, idx) => (
+              {(microsite.sections || []).map((sec, idx) => (
                 <div
                   key={idx}
                   className={
@@ -538,7 +541,7 @@ export function App() {
                   {microsite.quiz.question}
                 </h3>
                 <div className="space-y-2">
-                  {microsite.quiz.options.map((opt, idx) => {
+                  {(microsite.quiz.options || []).map((opt, idx) => {
                     const isSelected = selectedQuizOption === idx;
                     const isCorrect = idx === microsite.quiz.correctIndex;
                     const showResult = selectedQuizOption !== null;
