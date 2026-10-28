@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { MicrositeWidget } from '../types';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface Props {
   widget: MicrositeWidget;
@@ -7,6 +8,7 @@ interface Props {
 }
 
 export const DynamicWidget: React.FC<Props> = ({ widget }) => {
+  const { t } = useLanguage();
   // 1. State for 'simulation' parameters
   const defaultParamMap = useMemo(() => {
     const map: Record<string, number> = {};
@@ -522,13 +524,13 @@ export const DynamicWidget: React.FC<Props> = ({ widget }) => {
       >
         <div>
           <span className="kicker block mb-0.5">
-            Interactive Model · Live Response Curve
+            {t.microsite.widgetKicker}
           </span>
           <h3
             className="text-base font-semibold tracking-tight"
             style={{ color: 'var(--ink)' }}
           >
-            {widget?.title || 'Interactive Parameter Explorer'}
+            {widget?.title || t.microsite.widgetFallbackTitle}
           </h3>
         </div>
 
@@ -542,7 +544,7 @@ export const DynamicWidget: React.FC<Props> = ({ widget }) => {
             color: 'var(--ink-2)',
           }}
         >
-          Reset
+          {t.microsite.resetBtn}
         </button>
       </div>
 
@@ -562,7 +564,7 @@ export const DynamicWidget: React.FC<Props> = ({ widget }) => {
                 className="text-xs font-mono"
                 style={{ color: 'var(--ink-2)' }}
               >
-                {widget?.outputMetricLabel || 'Output'}:
+                {widget?.outputMetricLabel || t.microsite.outputLabel}:
               </span>
               <span
                 className="text-base font-mono font-semibold"
@@ -645,8 +647,8 @@ export const DynamicWidget: React.FC<Props> = ({ widget }) => {
             className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-[11px] font-mono pt-2 border-t"
             style={{ borderColor: 'var(--rule)', color: 'var(--ink-3)' }}
           >
-            <span>X: {widget?.xAxisLabel || 'Control Variable'}</span>
-            <span>Y: {widget?.yAxisLabel || 'Response'}</span>
+            <span>X: {widget?.xAxisLabel || t.microsite.controlVarFallback}</span>
+            <span>Y: {widget?.yAxisLabel || t.microsite.responseFallback}</span>
           </div>
         </div>
 
@@ -713,7 +715,9 @@ export const DynamicWidget: React.FC<Props> = ({ widget }) => {
 
         {widget?.explanation && (
           <div className="editorial-frame text-xs sm:text-sm leading-relaxed">
-            <strong style={{ color: 'var(--ink)' }}>Reading the model:</strong>{' '}
+            <strong style={{ color: 'var(--ink)' }}>
+              {t.microsite.readingModelLabel}
+            </strong>{' '}
             {widget.explanation}
           </div>
         )}

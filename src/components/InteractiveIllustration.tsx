@@ -1,17 +1,11 @@
 import React from 'react';
 import { MicrositeIllustration, IllustrationNode } from '../types';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface Props {
   illustration: MicrositeIllustration;
   accentColor?: string;
 }
-
-const GROUP_LABELS: Record<IllustrationNode['group'], string> = {
-  input: 'Input · Driver',
-  core: 'Core Mechanism',
-  output: 'Outcome · Synthesis',
-  context: 'Context · Anchor',
-};
 
 // Deterministic, non-overlapping schematic slots inside a 560x220 SVG viewBox
 const SCHEMATIC_SLOTS_4: Array<{ cx: number; cy: number }> = [
@@ -36,6 +30,7 @@ function truncateText(str: string, maxLen: number): string {
 }
 
 export const InteractiveIllustration: React.FC<Props> = ({ illustration }) => {
+  const { t } = useLanguage();
   const rawNodes = Array.isArray(illustration?.nodes) ? illustration.nodes : [];
   const nodes = rawNodes.slice(0, 5);
   const slots = nodes.length === 5 ? SCHEMATIC_SLOTS_5 : SCHEMATIC_SLOTS_4;
@@ -63,13 +58,13 @@ export const InteractiveIllustration: React.FC<Props> = ({ illustration }) => {
       >
         <div>
           <span className="kicker block mb-0.5">
-            Editorial Figure &amp; Schematic Diagram
+            {t.microsite.diagramKicker}
           </span>
           <h3
             className="text-base font-semibold tracking-tight"
             style={{ color: 'var(--ink)' }}
           >
-            {illustration?.title || 'Conceptual Schematic'}
+            {illustration?.title || t.microsite.diagramFallbackTitle}
           </h3>
         </div>
       </div>
@@ -201,7 +196,7 @@ export const InteractiveIllustration: React.FC<Props> = ({ illustration }) => {
             const ry = slot.cy - boxH / 2;
             const titleText = truncateText(node.label || `Stage ${index + 1}`, 23);
             const subText = truncateText(
-              node.sublabel || GROUP_LABELS[node.group] || 'Mechanism',
+              node.sublabel || t.microsite.nodeGroups[node.group] || 'Mechanism',
               27
             );
 

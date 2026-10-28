@@ -408,6 +408,20 @@ const server = http.createServer(async (req, res) => {
         )
           ? rawLevel
           : 'intermediate';
+        const rawLocale = String(parsed.locale || 'en')
+          .trim()
+          .toLowerCase();
+        const locale = ['en', 'fr', 'de', 'zh', 'ja'].includes(rawLocale)
+          ? rawLocale
+          : 'en';
+        const LOCALE_NAMES = {
+          en: 'English',
+          fr: 'French (Français)',
+          de: 'German (Deutsch)',
+          zh: 'Simplified Chinese (简体中文)',
+          ja: 'Japanese (日本語)',
+        };
+        const targetLangName = LOCALE_NAMES[locale] || 'English';
 
         if (!query || query.length < 2) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -417,7 +431,7 @@ const server = http.createServer(async (req, res) => {
           return;
         }
 
-        const cacheKey = `${query.toLowerCase()}::${level}`;
+        const cacheKey = `${query.toLowerCase()}::${level}::${locale}`;
         if (RESPONSE_CACHE.has(cacheKey)) {
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify(RESPONSE_CACHE.get(cacheKey)));
@@ -437,10 +451,14 @@ const server = http.createServer(async (req, res) => {
 
         const userInput = `Topic / Query: "${query}"
 Selected Expertise Level: ${level.toUpperCase()}
+Target Output Language: ${targetLangName} (locale="${locale}")
 
 ${levelGuide}
 
-Generate the microsite JSON for "${query}" calibrated for ${level.toUpperCase()} level:
+IMPORTANT LANGUAGE REQUIREMENT:
+Write ALL user-facing text fields (topic, subtitle, category, levelCalibrationNote, tldr, mentalModelOrFormalism.label, mentalModelOrFormalism.content, sections, keyFacts, illustration.title, illustration.caption, illustration.nodes[].label, illustration.nodes[].detail, widget.title, widget.subtitle, widget.explanation, widget.parameters[].label, widget.parameters[].description, books[].whyRead, rabbitHoles, sources[].relevance) natively in ${targetLangName}. Keep illustration.nodes[].group strictly in ["input", "core", "output", "context"] and entityType in ["concept", "person", "system", "phenomenon", "event"].
+
+Generate the microsite JSON for "${query}" calibrated for ${level.toUpperCase()} level in ${targetLangName}:
 - 3 concise article sections (2-3 sentences per section)
 - 4 keyFacts cards
 - 4 schematic nodes in "illustration.nodes" (ids "n1".."n4", x in 18..82, y in 22..78) and 3-4 "illustration.connections"

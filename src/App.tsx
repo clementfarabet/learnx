@@ -4,54 +4,11 @@ import { LEVELS, PRESET_TOPICS, buildPresetMicrosite } from './data/presets';
 import { InteractiveIllustration } from './components/InteractiveIllustration';
 import { DynamicWidget } from './components/DynamicWidget';
 import { Loader2, ArrowRight, ChevronDown } from 'lucide-react';
-
-interface ExampleTopicItem {
-  label: string;
-  topic: string;
-  category: string;
-  presetSlug?: string;
-}
-
-const EXAMPLE_TOPICS: ExampleTopicItem[] = [
-  ...PRESET_TOPICS.map((p) => ({
-    label: p.label,
-    topic: p.base.topic,
-    category: p.category,
-    presetSlug: p.slug,
-  })),
-  {
-    label: 'Marie Curie',
-    topic: 'Marie Curie',
-    category: 'Biography & Physics',
-  },
-  {
-    label: 'CRISPR-Cas9',
-    topic: 'CRISPR-Cas9 Gene Editing',
-    category: 'Molecular Biology',
-  },
-  {
-    label: 'Fourier Transform',
-    topic: 'Fourier Transform',
-    category: 'Mathematics & Signal Processing',
-  },
-  {
-    label: 'Black-Scholes Formula',
-    topic: 'Black-Scholes Option Pricing Formula',
-    category: 'Quantitative Finance',
-  },
-  {
-    label: 'General Relativity',
-    topic: 'Einstein General Relativity',
-    category: 'Theoretical Physics',
-  },
-  {
-    label: 'Zero-Knowledge Proofs',
-    topic: 'Zero-Knowledge Proofs',
-    category: 'Cryptography',
-  },
-];
+import { LOCALES, LocaleCode, useLanguage } from './i18n/LanguageContext';
 
 export function App() {
+  const { locale, setLocale, t } = useLanguage();
+
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     try {
       const saved = localStorage.getItem('lp_theme');
@@ -112,17 +69,16 @@ export function App() {
 
   const filteredExamples = React.useMemo(() => {
     const q = queryInput.trim().toLowerCase();
-    if (!q) return EXAMPLE_TOPICS;
-    return EXAMPLE_TOPICS.filter(
+    if (!q) return t.examples;
+    return t.examples.filter(
       (item) =>
         item.label.toLowerCase().includes(q) ||
         item.topic.toLowerCase().includes(q) ||
         item.category.toLowerCase().includes(q)
     );
-  }, [queryInput]);
+  }, [queryInput, t.examples]);
 
-  const currentLevelMeta =
-    LEVELS.find((l) => l.id === level) || LEVELS[1];
+  const currentLevelMeta = t.levels[level] || t.levels.intermediate;
 
   const matchPresetByQuery = (raw: string): string | null => {
     const q = raw.trim().toLowerCase();
@@ -143,25 +99,31 @@ export function App() {
   };
 
   const generateMicrosite = useCallback(
-    async (targetTopic: string, targetLevel: ExpertiseLevel) => {
+    async (
+      targetTopic: string,
+      targetLevel: ExpertiseLevel,
+      targetLocale: LocaleCode = locale
+    ) => {
       const trimmed = targetTopic.trim();
       if (!trimmed) return;
 
       setErrorMsg(null);
 
-      // 1. Check pre-built preset topics
-      const matchedSlug = matchPresetByQuery(trimmed);
-      if (matchedSlug) {
-        const built = buildPresetMicrosite(matchedSlug, targetLevel);
-        if (built) {
-          setActivePresetSlug(matchedSlug);
-          setMicrosite(built);
-          return;
+      // 1. Check pre-built preset topics (English only, so non-English locales get synthesized in the chosen language)
+      if (targetLocale === 'en') {
+        const matchedSlug = matchPresetByQuery(trimmed);
+        if (matchedSlug) {
+          const built = buildPresetMicrosite(matchedSlug, targetLevel);
+          if (built) {
+            setActivePresetSlug(matchedSlug);
+            setMicrosite(built);
+            return;
+          }
         }
       }
 
-      // 2. Check in-memory cache
-      const cacheKey = `${trimmed.toLowerCase()}::${targetLevel}`;
+      // 2. Check in-memory cache (keyed by topic + level + locale)
+      const cacheKey = `${trimmed.toLowerCase()}::${targetLevel}::${targetLocale}`;
       if (aiCache[cacheKey]) {
         setActivePresetSlug(null);
         setMicrosite(aiCache[cacheKey]);
@@ -171,7 +133,7 @@ export function App() {
       // 3. Call live Gemini backend API (/learnx/api/learn)
       setIsLoading(true);
       setLoadingStage(
-        `Synthesizing ${targetLevel} edition for “${trimmed}”…`
+        t.status.synthesizing(trimmed, t.levels[targetLevel].label)
       );
 
       try {
@@ -181,6 +143,7 @@ export function App() {
           body: JSON.stringify({
             query: trimmed,
             level: targetLevel,
+            locale: targetLocale,
           }),
         });
 
@@ -199,24 +162,32 @@ export function App() {
         setMicrosite(data);
       } catch (err) {
         setErrorMsg(
-          err instanceof Error
-            ? err.message
-            : 'Could not generate microsite. Please try again.'
+          err instanceof Error ? err.message : t.status.errorFallback
         );
       } finally {
         setIsLoading(false);
         setLoadingStage('');
       }
     },
-    [aiCache]
+    [aiCache, locale, t]
   );
+
+  const handleLocaleChange = (nextLocale: LocaleCode) => {
+    if (nextLocale === locale) return;
+    setLocale(nextLocale);
+    const currentTopic =
+      activeTopicQuery || microsite?.topic || '';
+    if (currentTopic) {
+      generateMicrosite(currentTopic, level, nextLocale);
+    }
+  };
 
   const handleLevelChange = (newLevel: ExpertiseLevel) => {
     setLevel(newLevel);
     if (!microsite && !activeTopicQuery && !queryInput.trim()) {
       return;
     }
-    if (activePresetSlug) {
+    if (activePresetSlug && locale === 'en') {
       const updated = buildPresetMicrosite(activePresetSlug, newLevel);
       if (updated) {
         setMicrosite(updated);
@@ -226,7 +197,7 @@ export function App() {
     const currentTopic =
       queryInput.trim() || activeTopicQuery || microsite?.topic || '';
     if (currentTopic) {
-      generateMicrosite(currentTopic, newLevel);
+      generateMicrosite(currentTopic, newLevel, locale);
     }
   };
 
@@ -236,14 +207,14 @@ export function App() {
     if (!trimmed || isLoading) return;
     setIsDropdownOpen(false);
     setActiveTopicQuery(trimmed);
-    generateMicrosite(trimmed, level);
+    generateMicrosite(trimmed, level, locale);
   };
 
   const handleSelectTopic = (topicText: string, presetSlug?: string) => {
     setQueryInput('');
     setIsDropdownOpen(false);
     setActiveTopicQuery(topicText);
-    if (presetSlug) {
+    if (presetSlug && locale === 'en') {
       const built = buildPresetMicrosite(presetSlug, level);
       if (built) {
         setActivePresetSlug(presetSlug);
@@ -252,7 +223,7 @@ export function App() {
         return;
       }
     }
-    generateMicrosite(topicText, level);
+    generateMicrosite(topicText, level, locale);
   };
 
   const handleResetHome = () => {
@@ -282,7 +253,7 @@ export function App() {
         }}
       >
         <div
-          className="max-w-6xl mx-auto px-5 sm:px-8 pt-4 pb-3 flex flex-wrap items-baseline justify-between gap-3 border-b"
+          className="max-w-6xl mx-auto px-5 sm:px-8 pt-4 pb-3 flex flex-wrap items-center justify-between gap-3 border-b"
           style={{ borderColor: 'var(--rule)' }}
         >
           <div className="flex items-baseline gap-2.5 flex-wrap">
@@ -306,7 +277,7 @@ export function App() {
             </a>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {microsite && (
               <button
                 type="button"
@@ -318,13 +289,51 @@ export function App() {
                   color: 'var(--ink-3)',
                 }}
               >
-                New search
+                {t.header.newSearch}
               </button>
             )}
+
+            {/* 5-Language Switcher Pill (EN / FR / DE / 中文 / 日本語) */}
+            <div
+              role="group"
+              aria-label="Language selector"
+              className="inline-flex items-center rounded-full p-0.5 border"
+              style={{
+                backgroundColor: 'var(--paper-2)',
+                borderColor: 'var(--rule)',
+              }}
+            >
+              {LOCALES.map((loc) => {
+                const isActive = locale === loc.code;
+                return (
+                  <button
+                    key={loc.code}
+                    type="button"
+                    onClick={() => handleLocaleChange(loc.code)}
+                    title={loc.nativeName}
+                    aria-pressed={isActive}
+                    className="px-2 py-0.5 text-[11px] font-semibold rounded-full transition cursor-pointer"
+                    style={
+                      isActive
+                        ? {
+                            backgroundColor: 'var(--ink)',
+                            color: 'var(--paper)',
+                          }
+                        : {
+                            color: 'var(--ink-3)',
+                          }
+                    }
+                  >
+                    {loc.label}
+                  </button>
+                );
+              })}
+            </div>
+
             <button
               type="button"
               onClick={() =>
-                setTheme((t) => (t === 'dark' ? 'light' : 'dark'))
+                setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))
               }
               className="text-xs font-medium px-3 py-1 rounded-full cursor-pointer"
               style={{
@@ -333,7 +342,7 @@ export function App() {
                 color: 'var(--ink-2)',
               }}
             >
-              {theme === 'dark' ? 'Light paper' : 'Dark ink'}
+              {theme === 'dark' ? t.header.lightPaper : t.header.darkInk}
             </button>
           </div>
         </div>
@@ -351,9 +360,7 @@ export function App() {
         >
           {isLanding && (
             <div className="text-center space-y-3 max-w-2xl mx-auto">
-              <span className="kicker block">
-                Adaptive Knowledge Engine · Novice to Pro
-              </span>
+              <span className="kicker block">{t.landing.kicker}</span>
               <h1
                 className="font-serif-editorial text-4xl sm:text-5xl font-normal tracking-tight"
                 style={{
@@ -362,13 +369,13 @@ export function App() {
                   letterSpacing: '-0.022em',
                 }}
               >
-                What would you like to learn?
+                {t.landing.headline}
               </h1>
               <p
                 className="font-serif-editorial text-lg sm:text-xl"
                 style={{ color: 'var(--ink-2)' }}
               >
-                Search any concept, theorem, system, or biography—synthesized at your chosen depth.
+                {t.landing.subtitle}
               </p>
             </div>
           )}
@@ -396,8 +403,8 @@ export function App() {
                     setQueryInput(e.target.value);
                     setIsDropdownOpen(true);
                   }}
-                  placeholder="Type a topic, theorem, system, or person…"
-                  aria-label="Topic or person query"
+                  placeholder={t.landing.placeholder}
+                  aria-label={t.landing.placeholder}
                   aria-expanded={isDropdownOpen}
                   aria-controls="learnx-examples-dropdown"
                   className="w-full bg-transparent text-sm sm:text-base focus:outline-none"
@@ -407,7 +414,7 @@ export function App() {
                   type="button"
                   onClick={() => setIsDropdownOpen((open) => !open)}
                   aria-label="Toggle example topics menu"
-                  title="Browse example topics"
+                  title={t.dropdown.exampleTopics}
                   className="ml-1 p-1.5 rounded-full cursor-pointer transition"
                   style={{ color: 'var(--ink-3)' }}
                 >
@@ -429,10 +436,10 @@ export function App() {
                   {isLoading ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Synthesizing…</span>
+                      <span>{t.landing.synthesizingBtn}</span>
                     </>
                   ) : (
-                    <span>Explore</span>
+                    <span>{t.landing.exploreBtn}</span>
                   )}
                 </button>
               </div>
@@ -457,14 +464,14 @@ export function App() {
                   >
                     <span className="kicker">
                       {queryInput.trim()
-                        ? 'Matching Examples'
-                        : 'Example Topics'}
+                        ? t.dropdown.matchingExamples
+                        : t.dropdown.exampleTopics}
                     </span>
                     <span
                       className="text-[11px]"
                       style={{ color: 'var(--ink-3)' }}
                     >
-                      Select an example or press Enter
+                      {t.dropdown.selectHint}
                     </span>
                   </div>
 
@@ -479,7 +486,7 @@ export function App() {
                           const trimmed = queryInput.trim();
                           setIsDropdownOpen(false);
                           setActiveTopicQuery(trimmed);
-                          generateMicrosite(trimmed, level);
+                          generateMicrosite(trimmed, level, locale);
                         }}
                         className="w-full text-left px-4 py-2.5 flex items-center justify-between gap-3 cursor-pointer transition"
                         style={{
@@ -488,7 +495,10 @@ export function App() {
                         }}
                       >
                         <span className="text-xs sm:text-sm font-semibold">
-                          Explore “{queryInput.trim()}” ({currentLevelMeta.label} edition)
+                          {t.dropdown.exploreEdition(
+                            queryInput.trim(),
+                            currentLevelMeta.label
+                          )}
                         </span>
                         <ArrowRight className="w-3.5 h-3.5 shrink-0" />
                       </button>
@@ -499,9 +509,8 @@ export function App() {
                         microsite &&
                         ((item.presetSlug &&
                           activePresetSlug === item.presetSlug) ||
-                          (!item.presetSlug &&
-                            activeTopicQuery.toLowerCase() ===
-                              item.topic.toLowerCase()));
+                          activeTopicQuery.toLowerCase() ===
+                            item.topic.toLowerCase());
                       return (
                         <button
                           key={item.label}
@@ -535,7 +544,7 @@ export function App() {
                                     color: 'var(--accent)',
                                   }}
                                 >
-                                  Active
+                                  {t.dropdown.activeBadge}
                                 </span>
                               )}
                             </div>
@@ -574,7 +583,7 @@ export function App() {
               }}
             >
               <span className="kicker pl-2 hidden xl:inline shrink-0">
-                Depth
+                {t.landing.depthLabel}
               </span>
               <div
                 role="group"
@@ -583,6 +592,7 @@ export function App() {
               >
                 {LEVELS.map((lvl) => {
                   const active = lvl.id === level;
+                  const localizedLevel = t.levels[lvl.id];
                   return (
                     <button
                       key={lvl.id}
@@ -601,7 +611,7 @@ export function App() {
                             }
                       }
                     >
-                      {lvl.label}
+                      {localizedLevel.label}
                     </button>
                   );
                 })}
@@ -646,7 +656,7 @@ export function App() {
                 onClick={() => setErrorMsg(null)}
                 className="text-xs underline ml-4 cursor-pointer"
               >
-                Dismiss
+                {t.status.dismiss}
               </button>
             </div>
           )}
@@ -672,7 +682,7 @@ export function App() {
               </span>
               <span style={{ color: 'var(--ink-3)' }}>·</span>
               <span className="kicker">
-                {microsite.readingTimeMinutes || 4} min read
+                {t.microsite.minRead(microsite.readingTimeMinutes || 4)}
               </span>
             </div>
 
@@ -790,7 +800,7 @@ export function App() {
                   style={{ borderColor: 'var(--rule)' }}
                 >
                   <span className="kicker block mb-2.5">
-                    Key Reference Coordinates
+                    {t.microsite.keyCoordinates}
                   </span>
                   <ol className="divide-y" style={{ borderColor: 'var(--rule)' }}>
                     {microsite.keyFacts.map((fact, idx) => (
@@ -835,16 +845,18 @@ export function App() {
             >
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <div>
-                  <span className="kicker block mb-1">Essential Reading</span>
+                  <span className="kicker block mb-1">
+                    {t.microsite.essentialReading}
+                  </span>
                   <h2
                     className="font-serif-editorial text-2xl font-normal tracking-tight"
                     style={{ color: 'var(--ink)' }}
                   >
-                    Top Books to Learn More
+                    {t.microsite.topBooksTitle}
                   </h2>
                 </div>
                 <span className="text-xs" style={{ color: 'var(--ink-3)' }}>
-                  Curated for {microsite.topic}
+                  {t.microsite.curatedFor(microsite.topic)}
                 </span>
               </div>
 
@@ -918,7 +930,7 @@ export function App() {
             {microsite.rabbitHoles && microsite.rabbitHoles.length > 0 && (
               <div className="lg:col-span-6 space-y-3">
                 <span className="kicker block">
-                  Connected Topics
+                  {t.microsite.connectedTopics}
                 </span>
                 <div className="flex flex-wrap gap-2">
                   {microsite.rabbitHoles.map((rh) => (
@@ -947,7 +959,9 @@ export function App() {
             {/* Grounded Sources */}
             {microsite.sources && microsite.sources.length > 0 && (
               <div className="lg:col-span-6 space-y-2.5">
-                <span className="kicker block">Primary Papers &amp; References</span>
+                <span className="kicker block">
+                  {t.microsite.primarySources}
+                </span>
                 <ol className="divide-y" style={{ borderColor: 'var(--rule)' }}>
                   {microsite.sources.map((src, idx) => (
                     <li
@@ -994,9 +1008,7 @@ export function App() {
         style={{ borderColor: 'var(--rule)', color: 'var(--ink-3)' }}
       >
         <div className="max-w-6xl mx-auto px-5 sm:px-8 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            LearnX · Adaptive Interactive Microsites (Novice to Pro)
-          </div>
+          <div>{t.microsite.footerTagline}</div>
           <div className="flex items-center gap-3">
             <a href="/" className="hover:underline">
               learnandplay.ai
