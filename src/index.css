@@ -1,26 +1,94 @@
 @import "tailwindcss";
 
-@layer base {
-  :root {
+:root {
+  --paper: #fbfaf7;
+  --paper-2: #f2f0ea;
+  --paper-3: #e9e6de;
+  --ink: #1b1a18;
+  --ink-2: #4f4d48;
+  --ink-3: #6c6963;
+  --rule: #e3e0d9;
+  --accent: #6d28d9;
+  --accent-soft: #ede9fe;
+
+  --serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121211;
+    --paper-2: #1c1b19;
+    --paper-3: #26241f;
+    --ink: #eceae4;
+    --ink-2: #aeaba4;
+    --ink-3: #8c8981;
+    --rule: #2c2a27;
+    --accent: #a78bfa;
+    --accent-soft: #2a2340;
     color-scheme: dark;
   }
+}
 
-  body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background-color: #090b10;
-    background-image:
-      radial-gradient(circle at 15% 0%, rgba(99, 102, 241, 0.12), transparent 40%),
-      radial-gradient(circle at 85% 10%, rgba(16, 185, 129, 0.08), transparent 35%),
-      linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-    background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
-  }
+:root[data-theme="dark"] {
+  --paper: #121211;
+  --paper-2: #1c1b19;
+  --paper-3: #26241f;
+  --ink: #eceae4;
+  --ink-2: #aeaba4;
+  --ink-3: #8c8981;
+  --rule: #2c2a27;
+  --accent: #a78bfa;
+  --accent-soft: #2a2340;
+  color-scheme: dark;
+}
 
-  .font-serif-editorial {
-    font-family: 'Newsreader', Georgia, serif;
-  }
+html, body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+}
 
-  .font-mono {
-    font-family: 'JetBrains Mono', monospace;
-  }
+.font-serif-editorial {
+  font-family: var(--serif);
+}
+
+.font-mono {
+  font-family: var(--mono);
+}
+
+.kicker {
+  font: 600 0.6875rem / 1.2 var(--sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.surface-card {
+  background-color: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 18px;
+}
+
+.surface-well {
+  background-color: var(--paper-2);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+}
+
+.editorial-frame {
+  border-left: 2px solid var(--rule);
+  padding-left: 0.9rem;
+  color: var(--ink-2);
+}
+
+input[type="range"] {
+  accent-color: var(--accent);
 }

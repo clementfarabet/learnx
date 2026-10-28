@@ -1,21 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { MicrositeWidget } from '../types';
-import {
-  Sliders,
-  RotateCcw,
-  Clock,
-  Activity,
-  GitBranch,
-  Scale,
-  ChevronRight,
-} from 'lucide-react';
 
 interface Props {
   widget: MicrositeWidget;
-  accentColor: string;
+  accentColor?: string;
 }
 
-export const DynamicWidget: React.FC<Props> = ({ widget, accentColor }) => {
+export const DynamicWidget: React.FC<Props> = ({ widget }) => {
   // 1. State for 'simulation' parameters
   const defaultParamMap = useMemo(() => {
     const map: Record<string, number> = {};
@@ -48,21 +39,7 @@ export const DynamicWidget: React.FC<Props> = ({ widget, accentColor }) => {
   const [systemImpulse, setSystemImpulse] = useState<number>(35);
   const [selectedStageIdx, setSelectedStageIdx] = useState<number>(0);
 
-  // 4. State for 'tradeoff-lab' weights
-  const [criteriaWeights, setCriteriaWeights] = useState<Record<string, number>>(
-    {}
-  );
-  useEffect(() => {
-    const w: Record<string, number> = {};
-    (widget?.criteria || []).forEach((c) => {
-      if (c && c.id) {
-        w[c.id] = Number(c.defaultWeight) || 50;
-      }
-    });
-    setCriteriaWeights(w);
-  }, [widget]);
-
-  // 5. Simulation calculations (MUST be above all conditional returns to obey React Rules of Hooks!)
+  // 4. Simulation calculations (above conditional returns for Rules of Hooks)
   const params = useMemo(() => widget?.parameters || [], [widget]);
   const p0 = params[0]
     ? Number(paramValues[params[0].id] ?? params[0].defaultValue ?? 1)
@@ -103,7 +80,7 @@ export const DynamicWidget: React.FC<Props> = ({ widget, accentColor }) => {
       const formula = widget?.formulaType || 'resonance-peak';
 
       for (let i = 0; i <= N; i++) {
-        const t = i / N; // 0..1
+        const t = i / N;
         let yNorm = 0.5;
 
         if (formula === 'harmonic-wave') {
@@ -207,7 +184,7 @@ export const DynamicWidget: React.FC<Props> = ({ widget, accentColor }) => {
       };
     }, [n0, n1, n2, p0, p1, p2, params, widget]);
 
-  // Render 'timeline' widget (for biographies, historical topics, evolutions)
+  // Render 'timeline' widget
   if (
     widget?.widgetType === 'timeline' &&
     Array.isArray(widget.events) &&
@@ -219,36 +196,37 @@ export const DynamicWidget: React.FC<Props> = ({ widget, accentColor }) => {
     const colCount = Math.min(6, Math.max(1, events.length));
 
     return (
-      <div className="rounded-2xl border border-white/10 bg-[#101420]/90 overflow-hidden shadow-2xl">
-        <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-3.5 border-b border-white/10 bg-white/[0.02]">
-          <div className="flex items-center gap-2.5">
-            <span
-              className="inline-flex items-center justify-center w-7 h-7 rounded-lg border border-white/15"
-              style={{ backgroundColor: `${accentColor}22`, color: accentColor }}
-            >
-              <Clock className="w-4 h-4" />
+      <div className="surface-card overflow-hidden">
+        <div
+          className="flex flex-wrap items-baseline justify-between gap-2 px-5 py-3.5 border-b"
+          style={{
+            borderColor: 'var(--rule)',
+            backgroundColor: 'var(--paper-2)',
+          }}
+        >
+          <div>
+            <span className="kicker block mb-0.5">
+              Interactive Chronology · Milestone {safeIdx + 1} of {events.length}
             </span>
-            <div>
-              <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400">
-                Interactive Chronology & Impact Scrubber
-              </span>
-              <h3 className="text-sm font-semibold text-white">
-                {widget.title}
-              </h3>
-            </div>
+            <h3
+              className="text-base font-semibold tracking-tight"
+              style={{ color: 'var(--ink)' }}
+            >
+              {widget.title}
+            </h3>
           </div>
-          <span className="text-xs font-mono px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-slate-300">
-            Milestone {safeIdx + 1} of {events.length}
-          </span>
         </div>
 
         <div className="p-5 space-y-5">
-          <p className="text-xs sm:text-sm text-slate-300">
+          <p
+            className="text-sm font-serif-editorial"
+            style={{ color: 'var(--ink-2)' }}
+          >
             {widget.subtitle || widget.explanation}
           </p>
 
           {/* Interactive Impact Bar & Scrubber */}
-          <div className="bg-[#0b0e17] border border-white/10 rounded-xl p-4">
+          <div className="surface-well p-4">
             <div
               className="grid gap-2 items-end h-28 pt-4 px-2"
               style={{
@@ -267,24 +245,21 @@ export const DynamicWidget: React.FC<Props> = ({ widget, accentColor }) => {
                     className="group flex flex-col items-center justify-end h-full cursor-pointer focus:outline-none"
                   >
                     <span
-                      className={`text-[10px] font-mono mb-1 transition ${
-                        isSelected
-                          ? 'text-white font-semibold'
-                          : 'text-slate-400 group-hover:text-slate-200'
-                      }`}
+                      className="text-[10px] font-mono mb-1"
+                      style={{
+                        color: isSelected ? 'var(--ink)' : 'var(--ink-3)',
+                        fontWeight: isSelected ? 600 : 400,
+                      }}
                     >
-                      {score}%
+                      {score}
                     </span>
                     <div
-                      className="w-full max-w-[44px] rounded-t-lg transition-all duration-300"
+                      className="w-full max-w-[42px] rounded-t-md transition-all duration-200"
                       style={{
                         height: `${heightPct}%`,
                         backgroundColor: isSelected
-                          ? accentColor
-                          : 'rgba(148, 163, 184, 0.22)',
-                        boxShadow: isSelected
-                          ? `0 0 20px ${accentColor}66`
-                          : 'none',
+                          ? 'var(--accent)'
+                          : 'var(--rule)',
                       }}
                     />
                   </button>
@@ -294,8 +269,9 @@ export const DynamicWidget: React.FC<Props> = ({ widget, accentColor }) => {
 
             {/* Year Pills */}
             <div
-              className="grid gap-2 pt-2 border-t border-white/10 mt-1"
+              className="grid gap-1.5 pt-2 border-t mt-1"
               style={{
+                borderColor: 'var(--rule)',
                 gridTemplateColumns: `repeat(${colCount}, minmax(0, 1fr))`,
               }}
             >
@@ -306,11 +282,17 @@ export const DynamicWidget: React.FC<Props> = ({ widget, accentColor }) => {
                     key={`pill-${ev.year}-${idx}`}
                     type="button"
                     onClick={() => setActiveEventIdx(idx)}
-                    className={`py-1.5 px-1 rounded-lg text-center font-mono text-xs truncate transition cursor-pointer ${
-                      isSelected
-                        ? 'bg-white/15 text-white font-semibold border border-white/25'
-                        : 'text-slate-400 hover:text-white hover:bg-white/5'
-                    }`}
+                    className="py-1 px-1 rounded-md text-center font-mono text-xs truncate cursor-pointer"
+                    style={{
+                      backgroundColor: isSelected
+                        ? 'var(--paper)'
+                        : 'transparent',
+                      color: isSelected ? 'var(--ink)' : 'var(--ink-3)',
+                      fontWeight: isSelected ? 600 : 400,
+                      border: isSelected
+                        ? '1px solid var(--rule)'
+                        : '1px solid transparent',
+                    }}
                     title={ev.year}
                   >
                     {ev.year}
@@ -319,12 +301,9 @@ export const DynamicWidget: React.FC<Props> = ({ widget, accentColor }) => {
               })}
             </div>
 
-            {/* Range slider for smooth scrubbing */}
             {events.length > 1 && (
-              <div className="mt-4 flex items-center gap-3">
-                <span className="text-[11px] font-mono text-slate-400">
-                  Scrub:
-                </span>
+              <div className="mt-3.5 flex items-center gap-3">
+                <span className="kicker">Scrub</span>
                 <input
                   type="range"
                   min={0}
@@ -332,7 +311,7 @@ export const DynamicWidget: React.FC<Props> = ({ widget, accentColor }) => {
                   step={1}
                   value={safeIdx}
                   onChange={(e) => setActiveEventIdx(Number(e.target.value))}
-                  className="w-full accent-indigo-500 cursor-pointer"
+                  className="w-full cursor-pointer"
                 />
               </div>
             )}
@@ -340,45 +319,46 @@ export const DynamicWidget: React.FC<Props> = ({ widget, accentColor }) => {
 
           {/* Active Milestone Card */}
           {current && (
-            <div className="rounded-xl border border-white/15 bg-white/[0.03] p-4 space-y-2.5">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
+            <div className="surface-well p-4 space-y-2">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <div className="flex items-baseline gap-2">
                   <span
-                    className="text-xs font-mono font-semibold px-2.5 py-0.5 rounded-md"
-                    style={{
-                      backgroundColor: `${accentColor}25`,
-                      color: accentColor,
-                    }}
+                    className="text-xs font-mono font-semibold"
+                    style={{ color: 'var(--accent)' }}
                   >
                     {current.year}
                   </span>
                   {current.domainTag && (
-                    <span className="text-xs font-mono px-2 py-0.5 rounded bg-white/5 text-slate-300 border border-white/10">
-                      {current.domainTag}
-                    </span>
+                    <span className="kicker">· {current.domainTag}</span>
                   )}
                 </div>
-                <span className="text-xs font-mono text-slate-400">
-                  Historical Leverage:{' '}
-                  <strong className="text-white">
-                    {current.impactScore || 80}/100
-                  </strong>
+                <span
+                  className="text-xs font-mono"
+                  style={{ color: 'var(--ink-3)' }}
+                >
+                  Impact {current.impactScore || 80}/100
                 </span>
               </div>
 
-              <h4 className="text-base font-semibold text-white">
+              <h4
+                className="text-base font-semibold"
+                style={{ color: 'var(--ink)' }}
+              >
                 {current.title}
               </h4>
-              <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">
+              <p
+                className="text-sm font-serif-editorial leading-relaxed"
+                style={{ color: 'var(--ink)' }}
+              >
                 {current.summary}
               </p>
               {current.deeperInsight && (
-                <div className="pt-2 border-t border-white/10 text-xs text-indigo-200/90 flex items-start gap-2">
-                  <ChevronRight className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
-                  <span>
-                    <strong className="text-white">Deeper Significance:</strong>{' '}
-                    {current.deeperInsight}
-                  </span>
+                <div
+                  className="editorial-frame text-xs sm:text-sm pt-1 mt-2"
+                  style={{ borderColor: 'var(--accent)' }}
+                >
+                  <strong style={{ color: 'var(--ink)' }}>Significance:</strong>{' '}
+                  {current.deeperInsight}
                 </div>
               )}
             </div>
@@ -398,37 +378,42 @@ export const DynamicWidget: React.FC<Props> = ({ widget, accentColor }) => {
     const activeStage = stages[selectedStageIdx] || stages[0];
 
     return (
-      <div className="rounded-2xl border border-white/10 bg-[#101420]/90 overflow-hidden shadow-2xl">
-        <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-3.5 border-b border-white/10 bg-white/[0.02]">
-          <div className="flex items-center gap-2.5">
-            <span
-              className="inline-flex items-center justify-center w-7 h-7 rounded-lg border border-white/15"
-              style={{ backgroundColor: `${accentColor}22`, color: accentColor }}
-            >
-              <GitBranch className="w-4 h-4" />
-            </span>
-            <div>
-              <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400">
-                Interactive System & Perturbation Lab
-              </span>
-              <h3 className="text-sm font-semibold text-white">
-                {widget.title}
-              </h3>
-            </div>
-          </div>
+      <div className="surface-card overflow-hidden">
+        <div
+          className="px-5 py-3.5 border-b"
+          style={{
+            borderColor: 'var(--rule)',
+            backgroundColor: 'var(--paper-2)',
+          }}
+        >
+          <span className="kicker block mb-0.5">
+            Interactive System &amp; Perturbation Lab
+          </span>
+          <h3
+            className="text-base font-semibold"
+            style={{ color: 'var(--ink)' }}
+          >
+            {widget.title}
+          </h3>
         </div>
 
         <div className="p-5 space-y-4">
-          <p className="text-xs sm:text-sm text-slate-300">
+          <p
+            className="text-sm font-serif-editorial"
+            style={{ color: 'var(--ink-2)' }}
+          >
             {widget.subtitle || widget.explanation}
           </p>
 
-          <div className="p-3.5 rounded-xl bg-[#0b0e17] border border-white/10">
+          <div className="surface-well p-3.5">
             <div className="flex items-center justify-between text-xs mb-1.5">
-              <span className="font-medium text-slate-200">
-                System Drive / Perturbation Impulse
+              <span className="font-medium" style={{ color: 'var(--ink)' }}>
+                System Drive / Impulse
               </span>
-              <span className="font-mono font-semibold text-indigo-300">
+              <span
+                className="font-mono font-semibold"
+                style={{ color: 'var(--accent)' }}
+              >
                 {systemImpulse > 0 ? `+${systemImpulse}%` : `${systemImpulse}%`}
               </span>
             </div>
@@ -439,7 +424,7 @@ export const DynamicWidget: React.FC<Props> = ({ widget, accentColor }) => {
               step={5}
               value={systemImpulse}
               onChange={(e) => setSystemImpulse(Number(e.target.value))}
-              className="w-full accent-indigo-500 cursor-pointer"
+              className="w-full cursor-pointer"
             />
           </div>
 
@@ -461,29 +446,43 @@ export const DynamicWidget: React.FC<Props> = ({ widget, accentColor }) => {
                   key={st.id || idx}
                   type="button"
                   onClick={() => setSelectedStageIdx(idx)}
-                  className={`p-3.5 rounded-xl border text-left transition cursor-pointer ${
-                    isSelected
-                      ? 'border-indigo-400/70 bg-indigo-950/35'
-                      : 'border-white/10 bg-white/[0.02] hover:bg-white/[0.05]'
-                  }`}
+                  className="p-3.5 rounded-xl border text-left transition cursor-pointer"
+                  style={{
+                    backgroundColor: isSelected
+                      ? 'var(--paper-2)'
+                      : 'var(--paper)',
+                    borderColor: isSelected ? 'var(--accent)' : 'var(--rule)',
+                  }}
                 >
                   <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="font-semibold text-white">
+                    <span
+                      className="font-semibold"
+                      style={{ color: 'var(--ink)' }}
+                    >
                       {idx + 1}. {st.name}
                     </span>
-                    <span className="font-mono text-indigo-300">
+                    <span
+                      className="font-mono"
+                      style={{ color: 'var(--accent)' }}
+                    >
                       {computed}%
                     </span>
                   </div>
-                  <div className="text-[11px] text-slate-400 mb-2">
+                  <div
+                    className="text-[11px] mb-2"
+                    style={{ color: 'var(--ink-3)' }}
+                  >
                     {st.role}
                   </div>
-                  <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+                  <div
+                    className="w-full h-1.5 rounded-full overflow-hidden"
+                    style={{ backgroundColor: 'var(--rule)' }}
+                  >
                     <div
                       className="h-full rounded-full transition-all duration-300"
                       style={{
                         width: `${computed}%`,
-                        backgroundColor: accentColor,
+                        backgroundColor: 'var(--accent)',
                       }}
                     />
                   </div>
@@ -493,11 +492,19 @@ export const DynamicWidget: React.FC<Props> = ({ widget, accentColor }) => {
           </div>
 
           {activeStage && (
-            <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 text-xs sm:text-sm text-slate-200">
-              <div className="font-semibold text-white mb-1">
+            <div className="surface-well p-4 text-sm">
+              <div
+                className="font-semibold mb-1"
+                style={{ color: 'var(--ink)' }}
+              >
                 {activeStage.name} — {activeStage.metricLabel}
               </div>
-              <p className="text-slate-300">{activeStage.mechanism}</p>
+              <p
+                className="font-serif-editorial"
+                style={{ color: 'var(--ink-2)' }}
+              >
+                {activeStage.mechanism}
+              </p>
             </div>
           )}
         </div>
@@ -505,198 +512,79 @@ export const DynamicWidget: React.FC<Props> = ({ widget, accentColor }) => {
     );
   }
 
-  // Render 'tradeoff-lab' widget
-  if (
-    widget?.widgetType === 'tradeoff-lab' &&
-    Array.isArray(widget.criteria) &&
-    Array.isArray(widget.options) &&
-    widget.options.length > 0
-  ) {
-    const criteria = widget.criteria;
-    const rankedOptions = [...widget.options]
-      .map((opt) => {
-        let weightedSum = 0;
-        let totalWeight = 0;
-        criteria.forEach((c, idx) => {
-          const w = criteriaWeights[c.id] ?? c.defaultWeight ?? 50;
-          const s = opt.scores?.[idx] ?? 70;
-          weightedSum += w * s;
-          totalWeight += w;
-        });
-        const composite =
-          totalWeight > 0 ? Math.round(weightedSum / totalWeight) : 70;
-        return { ...opt, composite };
-      })
-      .sort((a, b) => b.composite - a.composite);
-
-    return (
-      <div className="rounded-2xl border border-white/10 bg-[#101420]/90 overflow-hidden shadow-2xl">
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/10 bg-white/[0.02]">
-          <div className="flex items-center gap-2.5">
-            <span
-              className="inline-flex items-center justify-center w-7 h-7 rounded-lg border border-white/15"
-              style={{ backgroundColor: `${accentColor}22`, color: accentColor }}
-            >
-              <Scale className="w-4 h-4" />
-            </span>
-            <div>
-              <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400">
-                Interactive Trade-off & Priority Matrix
-              </span>
-              <h3 className="text-sm font-semibold text-white">
-                {widget.title}
-              </h3>
-            </div>
-          </div>
-        </div>
-
-        <div className="p-5 space-y-4">
-          <p className="text-xs sm:text-sm text-slate-300">
-            {widget.subtitle || widget.explanation}
-          </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-[#0b0e17] p-3.5 rounded-xl border border-white/10">
-            {criteria.map((c) => {
-              const val = criteriaWeights[c.id] ?? c.defaultWeight ?? 50;
-              return (
-                <div key={c.id} className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-300 font-medium">{c.label}</span>
-                    <span className="font-mono text-indigo-300">{val}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min={0}
-                    max={100}
-                    step={5}
-                    value={val}
-                    onChange={(e) =>
-                      setCriteriaWeights((prev) => ({
-                        ...prev,
-                        [c.id]: Number(e.target.value),
-                      }))
-                    }
-                    className="w-full accent-indigo-500 cursor-pointer"
-                  />
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="space-y-2.5">
-            {rankedOptions.map((opt, idx) => (
-              <div
-                key={opt.name}
-                className="p-3.5 rounded-xl border border-white/10 bg-white/[0.02]"
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono px-2 py-0.5 rounded bg-white/10 text-white">
-                      #{idx + 1}
-                    </span>
-                    <span className="text-sm font-semibold text-white">
-                      {opt.name}
-                    </span>
-                    <span className="text-xs text-slate-400 hidden sm:inline">
-                      · {opt.tagline}
-                    </span>
-                  </div>
-                  <span
-                    className="text-sm font-mono font-bold"
-                    style={{ color: accentColor }}
-                  >
-                    {opt.composite}/100
-                  </span>
-                </div>
-                <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden mb-2">
-                  <div
-                    className="h-full rounded-full transition-all duration-300"
-                    style={{
-                      width: `${opt.composite}%`,
-                      backgroundColor: accentColor,
-                    }}
-                  />
-                </div>
-                <p className="text-xs text-slate-300">{opt.summary}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Default / 'simulation' widget: Interactive Parameter Lab + Live SVG Response Curve
+  // Default / 'simulation' widget
   return (
-    <div className="rounded-2xl border border-white/10 bg-[#101420]/90 overflow-hidden shadow-2xl">
+    <div className="surface-card overflow-hidden">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-3.5 border-b border-white/10 bg-white/[0.02]">
-        <div className="flex items-center gap-2.5">
-          <span
-            className="inline-flex items-center justify-center w-7 h-7 rounded-lg border border-white/15"
-            style={{ backgroundColor: `${accentColor}22`, color: accentColor }}
-          >
-            <Sliders className="w-4 h-4" />
+      <div
+        className="flex flex-wrap items-baseline justify-between gap-2 px-5 py-3.5 border-b"
+        style={{ borderColor: 'var(--rule)', backgroundColor: 'var(--paper-2)' }}
+      >
+        <div>
+          <span className="kicker block mb-0.5">
+            Interactive Model · Live Response Curve
           </span>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400">
-                Interactive Dynamic Simulation
-              </span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                Live Model
-              </span>
-            </div>
-            <h3 className="text-sm font-semibold text-white">
-              {widget?.title || 'Interactive Parameter Explorer'}
-            </h3>
-          </div>
+          <h3
+            className="text-base font-semibold tracking-tight"
+            style={{ color: 'var(--ink)' }}
+          >
+            {widget?.title || 'Interactive Parameter Explorer'}
+          </h3>
         </div>
 
         <button
           type="button"
           onClick={() => setParamValues(defaultParamMap)}
-          className="inline-flex items-center gap-1.5 text-xs font-mono px-2.5 py-1 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 transition cursor-pointer"
-          title="Reset parameters to default values"
+          className="text-xs font-medium px-3 py-1 rounded-full cursor-pointer"
+          style={{
+            backgroundColor: 'var(--paper)',
+            border: '1px solid var(--rule)',
+            color: 'var(--ink-2)',
+          }}
         >
-          <RotateCcw className="w-3.5 h-3.5" />
           Reset
         </button>
       </div>
 
       <div className="p-5 space-y-5">
-        <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+        <p
+          className="text-sm font-serif-editorial leading-relaxed"
+          style={{ color: 'var(--ink-2)' }}
+        >
           {widget?.subtitle || widget?.explanation}
         </p>
 
         {/* Live Plotter Canvas */}
-        <div className="rounded-xl border border-white/10 bg-[#0b0e17] p-4">
-          <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-            <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-indigo-400" />
-              <span className="text-xs font-mono text-slate-300">
-                {widget?.outputMetricLabel || 'System Response Output'}:
+        <div className="surface-well p-4">
+          <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
+            <div className="flex items-baseline gap-2">
+              <span
+                className="text-xs font-mono"
+                style={{ color: 'var(--ink-2)' }}
+              >
+                {widget?.outputMetricLabel || 'Output'}:
               </span>
               <span
-                className="text-base font-mono font-bold"
-                style={{ color: accentColor }}
+                className="text-base font-mono font-semibold"
+                style={{ color: 'var(--accent)' }}
               >
                 {metricDisplay}{' '}
-                <span className="text-xs font-normal text-slate-400">
+                <span
+                  className="text-xs font-normal"
+                  style={{ color: 'var(--ink-3)' }}
+                >
                   {widget?.outputMetricUnit || ''}
                 </span>
               </span>
             </div>
-            <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-indigo-200">
-              {regimeLabel}
-            </span>
+            <span className="kicker">{regimeLabel}</span>
           </div>
 
           <svg viewBox="0 0 560 175" className="w-full h-40 overflow-visible">
             <defs>
               <linearGradient id="simAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={accentColor} stopOpacity="0.38" />
-                <stop offset="100%" stopColor={accentColor} stopOpacity="0.0" />
+                <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.22" />
+                <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.0" />
               </linearGradient>
             </defs>
 
@@ -705,7 +593,7 @@ export const DynamicWidget: React.FC<Props> = ({ widget, accentColor }) => {
               y1="45"
               x2="536"
               y2="45"
-              stroke="rgba(255,255,255,0.06)"
+              stroke="var(--rule)"
               strokeDasharray="4 4"
             />
             <line
@@ -713,7 +601,7 @@ export const DynamicWidget: React.FC<Props> = ({ widget, accentColor }) => {
               y1="90"
               x2="536"
               y2="90"
-              stroke="rgba(255,255,255,0.09)"
+              stroke="var(--rule)"
               strokeDasharray="3 5"
             />
             <line
@@ -721,7 +609,7 @@ export const DynamicWidget: React.FC<Props> = ({ widget, accentColor }) => {
               y1="135"
               x2="536"
               y2="135"
-              stroke="rgba(255,255,255,0.06)"
+              stroke="var(--rule)"
               strokeDasharray="4 4"
             />
 
@@ -729,8 +617,8 @@ export const DynamicWidget: React.FC<Props> = ({ widget, accentColor }) => {
             <path
               d={pointsPath}
               fill="none"
-              stroke={accentColor}
-              strokeWidth="2.75"
+              stroke="var(--accent)"
+              strokeWidth="2.25"
               strokeLinecap="round"
             />
 
@@ -739,27 +627,31 @@ export const DynamicWidget: React.FC<Props> = ({ widget, accentColor }) => {
               y1={20}
               x2={markerX}
               y2={155}
-              stroke="rgba(255,255,255,0.2)"
+              stroke="var(--ink-3)"
+              strokeOpacity="0.4"
               strokeDasharray="2 3"
             />
             <circle
               cx={markerX}
               cy={markerY}
-              r="6"
-              fill={accentColor}
-              stroke="#ffffff"
+              r="5.5"
+              fill="var(--accent)"
+              stroke="var(--paper)"
               strokeWidth="2"
             />
           </svg>
 
-          <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 pt-1 border-t border-white/5">
-            <span>X: {widget?.xAxisLabel || 'Control Variable Domain'}</span>
-            <span>Y: {widget?.yAxisLabel || 'Response Amplitude'}</span>
+          <div
+            className="flex items-center justify-between text-[11px] font-mono pt-1.5 border-t"
+            style={{ borderColor: 'var(--rule)', color: 'var(--ink-3)' }}
+          >
+            <span>X: {widget?.xAxisLabel || 'Control Variable'}</span>
+            <span>Y: {widget?.yAxisLabel || 'Response'}</span>
           </div>
         </div>
 
         {/* Interactive Parameter Sliders */}
-        <div className="grid grid-cols-1 gap-3.5">
+        <div className="grid grid-cols-1 gap-3">
           {params.map((p) => {
             const val = paramValues[p.id] ?? p.defaultValue ?? p.min ?? 0;
             const step =
@@ -769,18 +661,23 @@ export const DynamicWidget: React.FC<Props> = ({ widget, accentColor }) => {
             return (
               <div
                 key={p.id}
-                className="p-3.5 rounded-xl border border-white/10 bg-white/[0.02] hover:border-white/20 transition"
+                className="p-3.5 rounded-xl border"
+                style={{
+                  borderColor: 'var(--rule)',
+                  backgroundColor: 'var(--paper-2)',
+                }}
               >
-                <div className="flex items-center justify-between mb-1">
+                <div className="flex items-baseline justify-between mb-1">
                   <label
                     htmlFor={`param-${p.id}`}
-                    className="text-xs sm:text-sm font-medium text-white"
+                    className="text-xs sm:text-sm font-semibold"
+                    style={{ color: 'var(--ink)' }}
                   >
                     {p.label}
                   </label>
                   <span
-                    className="text-xs sm:text-sm font-mono font-semibold px-2 py-0.5 rounded bg-white/5 border border-white/10"
-                    style={{ color: accentColor }}
+                    className="text-xs sm:text-sm font-mono font-semibold"
+                    style={{ color: 'var(--accent)' }}
                   >
                     {val} {p.unit}
                   </span>
@@ -798,12 +695,15 @@ export const DynamicWidget: React.FC<Props> = ({ widget, accentColor }) => {
                       [p.id]: Number(e.target.value),
                     }))
                   }
-                  className="w-full accent-indigo-500 cursor-pointer my-1"
+                  className="w-full cursor-pointer my-1"
                 />
-                <div className="flex items-center justify-between text-[11px] text-slate-400">
+                <div
+                  className="flex items-center justify-between text-xs"
+                  style={{ color: 'var(--ink-3)' }}
+                >
                   <span>{p.description}</span>
                   <span className="font-mono shrink-0 ml-2">
-                    [{p.min} – {p.max} {p.unit}]
+                    {p.min}–{p.max} {p.unit}
                   </span>
                 </div>
               </div>
@@ -812,8 +712,8 @@ export const DynamicWidget: React.FC<Props> = ({ widget, accentColor }) => {
         </div>
 
         {widget?.explanation && (
-          <div className="text-xs text-slate-400 bg-white/[0.02] border border-white/5 rounded-xl p-3.5 leading-relaxed">
-            <strong className="text-slate-200">How to read this widget:</strong>{' '}
+          <div className="editorial-frame text-xs sm:text-sm leading-relaxed">
+            <strong style={{ color: 'var(--ink)' }}>Reading the model:</strong>{' '}
             {widget.explanation}
           </div>
         )}
