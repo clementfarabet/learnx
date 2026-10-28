@@ -21,7 +21,7 @@
     <script>
       (function() {
         try {
-          var saved = localStorage.getItem('clmt_theme') || localStorage.getItem('lp_theme');
+          var saved = localStorage.getItem('lp_theme');
           if (saved === 'dark' || saved === 'light') {
             document.documentElement.setAttribute('data-theme', saved);
           }

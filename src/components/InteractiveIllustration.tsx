@@ -90,7 +90,7 @@ export const InteractiveIllustration: React.FC<Props> = ({ illustration }) => {
             </marker>
           </defs>
 
-          {/* Subtle architectural guide rings matching clmt.ai line art */}
+          {/* Subtle architectural guide rings */}
           {illustration?.visualTheme === 'orbital' && (
             <g stroke="var(--rule)" fill="none" strokeWidth="1">
               <ellipse cx="400" cy="155" rx="250" ry="105" strokeDasharray="4 6" />

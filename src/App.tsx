@@ -8,8 +8,7 @@ import { Loader2, ArrowRight } from 'lucide-react';
 export function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     try {
-      const saved =
-        localStorage.getItem('clmt_theme') || localStorage.getItem('lp_theme');
+      const saved = localStorage.getItem('lp_theme');
       if (saved === 'dark' || saved === 'light') return saved;
     } catch {
       // ignore
@@ -23,7 +22,6 @@ export function App() {
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     try {
-      localStorage.setItem('clmt_theme', theme);
       localStorage.setItem('lp_theme', theme);
     } catch {
       // ignore
@@ -185,7 +183,7 @@ export function App() {
       className="min-h-screen flex flex-col"
       style={{ backgroundColor: 'var(--paper)', color: 'var(--ink)' }}
     >
-      {/* Top Editorial Masthead — clmt.ai style */}
+      {/* Top Editorial Masthead */}
       <header
         className="sticky top-0 z-30"
         style={{
@@ -213,16 +211,6 @@ export function App() {
               style={{ color: 'var(--ink-3)' }}
             >
               learnandplay.ai
-            </a>
-            <span className="text-xs" style={{ color: 'var(--ink-3)' }}>
-              ·
-            </span>
-            <a
-              href="https://clmt.ai"
-              className="text-xs font-medium hover:underline"
-              style={{ color: 'var(--ink-3)' }}
-            >
-              Clément Farabet ↗
             </a>
           </div>
 
@@ -636,7 +624,7 @@ export function App() {
             {/* Interactive Concept Illustration */}
             <InteractiveIllustration illustration={microsite.illustration} />
 
-            {/* Editorial Key Reference Rows (clmt.ai .rows style) */}
+            {/* Editorial Key Reference Rows */}
             {microsite.keyFacts && microsite.keyFacts.length > 0 && (
               <div
                 className="pt-4 border-t"
@@ -770,10 +758,6 @@ export function App() {
           <div className="flex items-center gap-3">
             <a href="/" className="hover:underline">
               learnandplay.ai
-            </a>
-            <span>·</span>
-            <a href="https://clmt.ai" className="hover:underline">
-              clmt.ai ↗
             </a>
           </div>
         </div>
