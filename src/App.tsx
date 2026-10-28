@@ -28,7 +28,8 @@ export function App() {
     }
   }, [theme]);
 
-  const [queryInput, setQueryInput] = useState<string>(
+  const [queryInput, setQueryInput] = useState<string>('');
+  const [activeTopicQuery, setActiveTopicQuery] = useState<string>(
     'Transformer Self-Attention'
   );
   const [activePresetSlug, setActivePresetSlug] = useState<string | null>(
@@ -154,18 +155,22 @@ export function App() {
         return;
       }
     }
-    const currentTopic = queryInput.trim() || microsite.topic;
+    const currentTopic =
+      queryInput.trim() || activeTopicQuery || microsite.topic;
     generateMicrosite(currentTopic, newLevel);
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!queryInput.trim() || isLoading) return;
-    generateMicrosite(queryInput.trim(), level);
+    const trimmed = queryInput.trim();
+    if (!trimmed || isLoading) return;
+    setActiveTopicQuery(trimmed);
+    generateMicrosite(trimmed, level);
   };
 
   const handleSelectTopic = (topicText: string, presetSlug?: string) => {
-    setQueryInput(topicText);
+    setQueryInput('');
+    setActiveTopicQuery(topicText);
     if (presetSlug) {
       const built = buildPresetMicrosite(presetSlug, level);
       if (built) {
@@ -255,7 +260,7 @@ export function App() {
                 type="text"
                 value={queryInput}
                 onChange={(e) => setQueryInput(e.target.value)}
-                placeholder="Type any topic, theorem, system, or person…"
+                placeholder="What would you like to learn? Type any topic, theorem, system, or person…"
                 aria-label="Topic or person query"
                 className="w-full bg-transparent text-sm sm:text-base focus:outline-none"
                 style={{ color: 'var(--ink)' }}
