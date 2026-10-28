@@ -138,11 +138,20 @@ export interface GroundedSource {
   relevance: string;
 }
 
+export interface RecommendedBook {
+  title: string;
+  author: string;
+  year?: string;
+  whyRead: string;
+  url?: string;
+}
+
 export interface MicrositeData {
   topic: string;
   subtitle: string;
   category: string;
   entityType: 'concept' | 'person' | 'system' | 'phenomenon' | 'event';
+  visualMode?: 'diagram' | 'widget';
   level: ExpertiseLevel;
   levelCalibrationNote: string;
   readingTimeMinutes: number;
@@ -155,8 +164,9 @@ export interface MicrositeData {
   sections: ArticleSection[];
   keyFacts: KeyFact[];
   illustration: MicrositeIllustration;
-  widget: MicrositeWidget;
-  quiz: MicrositeQuiz;
+  widget?: MicrositeWidget;
+  quiz?: MicrositeQuiz;
+  books?: RecommendedBook[];
   rabbitHoles: string[];
   sources: GroundedSource[];
   model?: string;

@@ -75,34 +75,18 @@ export function App() {
   }, [theme]);
 
   const [queryInput, setQueryInput] = useState<string>('');
-  const [activeTopicQuery, setActiveTopicQuery] = useState<string>(
-    'Transformer Self-Attention'
-  );
-  const [activePresetSlug, setActivePresetSlug] = useState<string | null>(
-    'transformer-attention'
-  );
+  const [activeTopicQuery, setActiveTopicQuery] = useState<string>('');
+  const [activePresetSlug, setActivePresetSlug] = useState<string | null>(null);
   const [level, setLevel] = useState<ExpertiseLevel>('intermediate');
-  const [microsite, setMicrosite] = useState<MicrositeData>(() => {
-    return (
-      buildPresetMicrosite('transformer-attention', 'intermediate') ||
-      buildPresetMicrosite(PRESET_TOPICS[0].slug, 'intermediate')!
-    );
-  });
+  const [microsite, setMicrosite] = useState<MicrositeData | null>(null);
 
   const [aiCache, setAiCache] = useState<Record<string, MicrositeData>>({});
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loadingStage, setLoadingStage] = useState<string>('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const [selectedQuizOption, setSelectedQuizOption] = useState<number | null>(
-    null
-  );
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const queryContainerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setSelectedQuizOption(null);
-  }, [microsite.topic, microsite.level]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -229,6 +213,9 @@ export function App() {
 
   const handleLevelChange = (newLevel: ExpertiseLevel) => {
     setLevel(newLevel);
+    if (!microsite && !activeTopicQuery && !queryInput.trim()) {
+      return;
+    }
     if (activePresetSlug) {
       const updated = buildPresetMicrosite(activePresetSlug, newLevel);
       if (updated) {
@@ -237,8 +224,10 @@ export function App() {
       }
     }
     const currentTopic =
-      queryInput.trim() || activeTopicQuery || microsite.topic;
-    generateMicrosite(currentTopic, newLevel);
+      queryInput.trim() || activeTopicQuery || microsite?.topic || '';
+    if (currentTopic) {
+      generateMicrosite(currentTopic, newLevel);
+    }
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -266,6 +255,19 @@ export function App() {
     generateMicrosite(topicText, level);
   };
 
+  const handleResetHome = () => {
+    setMicrosite(null);
+    setActivePresetSlug(null);
+    setActiveTopicQuery('');
+    setQueryInput('');
+    setErrorMsg(null);
+    setIsDropdownOpen(false);
+  };
+
+  const isLanding = !microsite && !isLoading;
+  const shouldShowWidget =
+    Boolean(microsite?.visualMode === 'widget' && microsite?.widget);
+
   return (
     <div
       className="min-h-screen flex flex-col"
@@ -284,12 +286,14 @@ export function App() {
           style={{ borderColor: 'var(--rule)' }}
         >
           <div className="flex items-baseline gap-2.5 flex-wrap">
-            <span
-              className="text-sm font-semibold tracking-tight"
+            <button
+              type="button"
+              onClick={handleResetHome}
+              className="text-sm font-semibold tracking-tight cursor-pointer hover:opacity-80"
               style={{ color: 'var(--ink)' }}
             >
               LearnX
-            </span>
+            </button>
             <span className="text-xs" style={{ color: 'var(--ink-3)' }}>
               ·
             </span>
@@ -303,6 +307,20 @@ export function App() {
           </div>
 
           <div className="flex items-center gap-2">
+            {microsite && (
+              <button
+                type="button"
+                onClick={handleResetHome}
+                className="text-xs font-medium px-3 py-1 rounded-full cursor-pointer"
+                style={{
+                  backgroundColor: 'transparent',
+                  border: '1px solid var(--rule)',
+                  color: 'var(--ink-3)',
+                }}
+              >
+                New search
+              </button>
+            )}
             <button
               type="button"
               onClick={() =>
@@ -321,12 +339,40 @@ export function App() {
         </div>
       </header>
 
-      {/* Query Input + Novice-to-Pro Toggle Bar */}
+      {/* Search Engine Bar (Centered on blank landing, compact at top when viewing a topic) */}
       <section
-        className="border-b"
+        className={isLanding ? 'flex-1 flex flex-col justify-center' : 'border-b'}
         style={{ borderColor: 'var(--rule)' }}
       >
-        <div className="max-w-6xl mx-auto px-5 sm:px-8 py-6 space-y-3">
+        <div
+          className={`max-w-5xl w-full mx-auto px-5 sm:px-8 ${
+            isLanding ? 'py-16 sm:py-24 space-y-7' : 'py-5 space-y-3'
+          }`}
+        >
+          {isLanding && (
+            <div className="text-center space-y-3 max-w-2xl mx-auto">
+              <span className="kicker block">
+                Adaptive Knowledge Engine · Novice to Pro
+              </span>
+              <h1
+                className="font-serif-editorial text-4xl sm:text-5xl font-normal tracking-tight"
+                style={{
+                  color: 'var(--ink)',
+                  lineHeight: 1.06,
+                  letterSpacing: '-0.022em',
+                }}
+              >
+                What would you like to learn?
+              </h1>
+              <p
+                className="font-serif-editorial text-lg sm:text-xl"
+                style={{ color: 'var(--ink-2)' }}
+              >
+                Search any concept, theorem, system, or biography—synthesized at your chosen depth.
+              </p>
+            </div>
+          )}
+
           <form
             onSubmit={handleSearchSubmit}
             className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch"
@@ -350,7 +396,7 @@ export function App() {
                     setQueryInput(e.target.value);
                     setIsDropdownOpen(true);
                   }}
-                  placeholder="What would you like to learn? Type any topic, theorem, system, or person…"
+                  placeholder="Type a topic, theorem, system, or person…"
                   aria-label="Topic or person query"
                   aria-expanded={isDropdownOpen}
                   aria-controls="learnx-examples-dropdown"
@@ -396,7 +442,7 @@ export function App() {
                 <div
                   id="learnx-examples-dropdown"
                   role="listbox"
-                  className="absolute left-0 right-0 top-full mt-2 z-40 surface-card shadow-xl overflow-hidden"
+                  className="absolute left-0 right-0 top-full mt-2 z-40 surface-card shadow-xl overflow-hidden text-left"
                   style={{
                     backgroundColor: 'var(--paper)',
                     borderColor: 'var(--rule)',
@@ -412,17 +458,20 @@ export function App() {
                     <span className="kicker">
                       {queryInput.trim()
                         ? 'Matching Examples'
-                        : 'Example Topics & Interactive Editions'}
+                        : 'Example Topics'}
                     </span>
                     <span
                       className="text-[11px]"
                       style={{ color: 'var(--ink-3)' }}
                     >
-                      Select an example or press Enter to synthesize
+                      Select an example or press Enter
                     </span>
                   </div>
 
-                  <div className="max-h-72 overflow-y-auto divide-y" style={{ borderColor: 'var(--rule)' }}>
+                  <div
+                    className="max-h-72 overflow-y-auto divide-y"
+                    style={{ borderColor: 'var(--rule)' }}
+                  >
                     {queryInput.trim() && (
                       <button
                         type="button"
@@ -447,11 +496,12 @@ export function App() {
 
                     {filteredExamples.map((item) => {
                       const isCurrent =
-                        (item.presetSlug &&
+                        microsite &&
+                        ((item.presetSlug &&
                           activePresetSlug === item.presetSlug) ||
-                        (!item.presetSlug &&
-                          activeTopicQuery.toLowerCase() ===
-                            item.topic.toLowerCase());
+                          (!item.presetSlug &&
+                            activeTopicQuery.toLowerCase() ===
+                              item.topic.toLowerCase()));
                       return (
                         <button
                           key={item.label}
@@ -560,7 +610,11 @@ export function App() {
           </form>
 
           {/* Calibration Tagline */}
-          <div className="flex items-center justify-end pt-0.5">
+          <div
+            className={`flex items-center ${
+              isLanding ? 'justify-center' : 'justify-end'
+            } pt-0.5`}
+          >
             <div className="text-xs" style={{ color: 'var(--ink-3)' }}>
               <strong style={{ color: 'var(--ink-2)' }}>
                 {currentLevelMeta.badge}:
@@ -599,280 +653,289 @@ export function App() {
         </div>
       </section>
 
-      {/* Main Interactive Microsite Body */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-5 sm:px-8 py-10">
-        {/* Editorial Cover Header */}
-        <div
-          className="mb-10 pb-8 border-b"
-          style={{ borderColor: 'var(--rule)' }}
-        >
-          <div className="flex flex-wrap items-center gap-3 mb-4">
-            <span className="kicker">{microsite.category}</span>
-            <span style={{ color: 'var(--ink-3)' }}>·</span>
-            <span
-              className="kicker"
-              style={{ color: 'var(--accent)' }}
+      {/* Main Microsite Body (rendered only when a topic has been selected) */}
+      {microsite && (
+        <main className="flex-1 max-w-5xl w-full mx-auto px-5 sm:px-8 py-10 space-y-12">
+          {/* Editorial Cover Header */}
+          <div
+            className="pb-8 border-b space-y-4"
+            style={{ borderColor: 'var(--rule)' }}
+          >
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="kicker">{microsite.category}</span>
+              <span style={{ color: 'var(--ink-3)' }}>·</span>
+              <span
+                className="kicker"
+                style={{ color: 'var(--accent)' }}
+              >
+                {currentLevelMeta.badge} ({currentLevelMeta.label})
+              </span>
+              <span style={{ color: 'var(--ink-3)' }}>·</span>
+              <span className="kicker">
+                {microsite.readingTimeMinutes || 4} min read
+              </span>
+            </div>
+
+            <h1
+              className="font-serif-editorial text-4xl sm:text-5xl font-normal tracking-tight"
+              style={{
+                color: 'var(--ink)',
+                lineHeight: 1.05,
+                letterSpacing: '-0.022em',
+              }}
             >
-              {currentLevelMeta.badge} ({currentLevelMeta.label})
-            </span>
-            <span style={{ color: 'var(--ink-3)' }}>·</span>
-            <span className="kicker">
-              {microsite.readingTimeMinutes || 4} min read
-            </span>
+              {microsite.topic}
+            </h1>
+
+            <p
+              className="font-serif-editorial text-xl sm:text-2xl leading-snug max-w-3xl"
+              style={{ color: 'var(--ink-2)' }}
+            >
+              {microsite.subtitle}
+            </p>
+
+            {/* Lead Thesis */}
+            <p
+              className="editorial-frame font-serif-editorial text-base sm:text-lg leading-relaxed max-w-3xl pt-1"
+              style={{ borderColor: 'var(--accent)', color: 'var(--ink)' }}
+            >
+              {microsite.tldr}
+            </p>
           </div>
 
-          <h1
-            className="font-serif-editorial text-4xl sm:text-5xl font-normal tracking-tight mb-4"
-            style={{
-              color: 'var(--ink)',
-              lineHeight: 1.05,
-              letterSpacing: '-0.022em',
-            }}
-          >
-            {microsite.topic}
-          </h1>
-
-          <p
-            className="font-serif-editorial text-xl sm:text-2xl leading-snug max-w-3xl"
-            style={{ color: 'var(--ink-2)' }}
-          >
-            {microsite.subtitle}
-          </p>
-
-          <p
-            className="editorial-frame mt-5 text-xs sm:text-sm"
-            style={{ borderColor: 'var(--accent)' }}
-          >
-            {microsite.levelCalibrationNote}
-          </p>
-        </div>
-
-        {/* Two-Column Editorial & Interactive Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-          {/* LEFT COLUMN: Essay / Article, Mental Model / Formalism, Self-Check */}
-          <div className="lg:col-span-6 space-y-8">
-            {/* Thesis / Synthesis */}
-            <section className="space-y-2">
-              <span className="kicker block">
-                Thesis · {currentLevelMeta.label} Edition
-              </span>
-              <p
-                className="font-serif-editorial text-lg sm:text-xl leading-relaxed"
-                style={{ color: 'var(--ink)' }}
-              >
-                {microsite.tldr}
-              </p>
-            </section>
-
-            {/* Mental Model (Novice/Intermediate) or Formalism Box (Advanced/Pro) */}
-            {microsite.mentalModelOrFormalism && (
-              <div className="surface-well p-5 space-y-2.5">
-                <span
-                  className="kicker block"
-                  style={{ color: 'var(--accent)' }}
-                >
-                  {microsite.mentalModelOrFormalism.label}
-                </span>
-                <p
-                  className="text-sm sm:text-base font-serif-editorial leading-relaxed"
-                  style={{ color: 'var(--ink)' }}
-                >
-                  {microsite.mentalModelOrFormalism.content}
-                </p>
-                {microsite.mentalModelOrFormalism.formulaOrCode && (
-                  <pre
-                    className="p-3 rounded-lg text-xs font-mono overflow-x-auto border"
-                    style={{
-                      backgroundColor: 'var(--paper)',
-                      borderColor: 'var(--rule)',
-                      color: 'var(--ink)',
-                    }}
+          {/* Streamlined Two-Column Editorial & Figure Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+            {/* LEFT COLUMN: Concise Article & Mental Model / Formalism */}
+            <div className="lg:col-span-7 space-y-8">
+              {/* Mental Model (Novice/Intermediate) or Formalism Box (Advanced/Pro) */}
+              {microsite.mentalModelOrFormalism && (
+                <div className="surface-well p-5 space-y-2">
+                  <span
+                    className="kicker block"
+                    style={{ color: 'var(--accent)' }}
                   >
-                    <code>{microsite.mentalModelOrFormalism.formulaOrCode}</code>
-                  </pre>
-                )}
-              </div>
-            )}
-
-            {/* Structured Article Sections */}
-            <article className="space-y-7">
-              {(microsite.sections || []).map((sec, idx) => (
-                <section
-                  key={idx}
-                  className="pt-6 border-t space-y-3"
-                  style={{ borderColor: 'var(--rule)' }}
-                >
-                  <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <h2
-                      className="text-lg font-semibold tracking-tight"
-                      style={{ color: 'var(--ink)' }}
-                    >
-                      {sec.heading}
-                    </h2>
-                    {sec.keyTerm && (
-                      <span className="kicker">{sec.keyTerm}</span>
-                    )}
-                  </div>
+                    {microsite.mentalModelOrFormalism.label}
+                  </span>
                   <p
-                    className="font-serif-editorial text-base sm:text-[1.125rem] leading-relaxed"
+                    className="text-sm sm:text-base font-serif-editorial leading-relaxed"
                     style={{ color: 'var(--ink)' }}
                   >
-                    {sec.body}
+                    {microsite.mentalModelOrFormalism.content}
                   </p>
-                  {sec.highlightCallout && (
-                    <blockquote
-                      className="editorial-frame font-serif-editorial italic text-base"
-                      style={{ borderColor: 'var(--accent)' }}
+                  {microsite.mentalModelOrFormalism.formulaOrCode && (
+                    <pre
+                      className="p-3 rounded-lg text-xs font-mono overflow-x-auto border"
+                      style={{
+                        backgroundColor: 'var(--paper)',
+                        borderColor: 'var(--rule)',
+                        color: 'var(--ink)',
+                      }}
                     >
-                      {sec.highlightCallout}
-                    </blockquote>
+                      <code>{microsite.mentalModelOrFormalism.formulaOrCode}</code>
+                    </pre>
                   )}
-                </section>
-              ))}
-            </article>
-
-            {/* Comprehension Reflection Card */}
-            {microsite.quiz && (
-              <div
-                className="pt-7 border-t space-y-4"
-                style={{ borderColor: 'var(--rule)' }}
-              >
-                <span className="kicker block">
-                  Check Your Hold on the Argument · {currentLevelMeta.label}
-                </span>
-                <h3
-                  className="text-base sm:text-lg font-semibold leading-snug"
-                  style={{ color: 'var(--ink)' }}
-                >
-                  {microsite.quiz.question}
-                </h3>
-                <div className="space-y-2">
-                  {(microsite.quiz.options || []).map((opt, idx) => {
-                    const isSelected = selectedQuizOption === idx;
-                    const isCorrect = idx === microsite.quiz.correctIndex;
-                    const showResult = selectedQuizOption !== null;
-
-                    let borderCol = 'var(--rule)';
-                    let bgCol = 'var(--paper-2)';
-                    if (showResult) {
-                      if (isCorrect) {
-                        borderCol = 'var(--accent)';
-                        bgCol = 'var(--accent-soft)';
-                      } else if (isSelected && !isCorrect) {
-                        borderCol = 'var(--ink-3)';
-                      }
-                    }
-
-                    return (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => setSelectedQuizOption(idx)}
-                        className="w-full text-left p-3.5 rounded-xl border text-xs sm:text-sm transition flex items-start justify-between gap-3 cursor-pointer"
-                        style={{
-                          borderColor: borderCol,
-                          backgroundColor: bgCol,
-                          color: 'var(--ink)',
-                        }}
-                      >
-                        <span>{opt}</span>
-                        {showResult && isCorrect && (
-                          <span
-                            className="text-xs font-mono font-semibold shrink-0"
-                            style={{ color: 'var(--accent)' }}
-                          >
-                            ✓
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
                 </div>
-                {selectedQuizOption !== null && (
-                  <p className="editorial-frame text-xs sm:text-sm">
-                    <strong style={{ color: 'var(--ink)' }}>Reasoning: </strong>
-                    {microsite.quiz.explanation}
-                  </p>
-                )}
-              </div>
-            )}
+              )}
+
+              {/* Structured Article Sections */}
+              <article className="space-y-7">
+                {(microsite.sections || []).map((sec, idx) => (
+                  <section
+                    key={idx}
+                    className={idx > 0 ? 'pt-6 border-t space-y-2.5' : 'space-y-2.5'}
+                    style={{ borderColor: 'var(--rule)' }}
+                  >
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <h2
+                        className="text-lg font-semibold tracking-tight"
+                        style={{ color: 'var(--ink)' }}
+                      >
+                        {sec.heading}
+                      </h2>
+                      {sec.keyTerm && (
+                        <span className="kicker">{sec.keyTerm}</span>
+                      )}
+                    </div>
+                    <p
+                      className="font-serif-editorial text-base sm:text-[1.125rem] leading-relaxed"
+                      style={{ color: 'var(--ink)' }}
+                    >
+                      {sec.body}
+                    </p>
+                    {sec.highlightCallout && (
+                      <blockquote
+                        className="editorial-frame font-serif-editorial italic text-sm sm:text-base"
+                        style={{ borderColor: 'var(--accent)' }}
+                      >
+                        {sec.highlightCallout}
+                      </blockquote>
+                    )}
+                  </section>
+                ))}
+              </article>
+            </div>
+
+            {/* RIGHT COLUMN: Single Visual Figure (Static Diagram by default, Widget only when quantitative) + Key Coordinates */}
+            <div className="lg:col-span-5 space-y-8">
+              {shouldShowWidget && microsite.widget ? (
+                <DynamicWidget widget={microsite.widget} />
+              ) : (
+                <InteractiveIllustration illustration={microsite.illustration} />
+              )}
+
+              {/* Editorial Key Reference Rows */}
+              {microsite.keyFacts && microsite.keyFacts.length > 0 && (
+                <div
+                  className="pt-4 border-t"
+                  style={{ borderColor: 'var(--rule)' }}
+                >
+                  <span className="kicker block mb-2.5">
+                    Key Reference Coordinates
+                  </span>
+                  <ol className="divide-y" style={{ borderColor: 'var(--rule)' }}>
+                    {microsite.keyFacts.map((fact, idx) => (
+                      <li
+                        key={idx}
+                        className="py-2.5 flex items-baseline justify-between gap-4"
+                        style={{ borderColor: 'var(--rule)' }}
+                      >
+                        <div>
+                          <span
+                            className="text-xs font-semibold block"
+                            style={{ color: 'var(--ink)' }}
+                          >
+                            {fact.label}
+                          </span>
+                          <span
+                            className="text-xs font-serif-editorial"
+                            style={{ color: 'var(--ink-2)' }}
+                          >
+                            {fact.detail}
+                          </span>
+                        </div>
+                        <span
+                          className="text-xs font-mono font-semibold shrink-0"
+                          style={{ color: 'var(--accent)' }}
+                        >
+                          {fact.value}
+                        </span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* RIGHT COLUMN: Playable Widget, Concept Diagram, Key Specifications & Sources */}
-          <div className="lg:col-span-6 space-y-8">
-            {/* Dynamic Playable Widget */}
-            <DynamicWidget widget={microsite.widget} />
-
-            {/* Interactive Concept Illustration */}
-            <InteractiveIllustration illustration={microsite.illustration} />
-
-            {/* Editorial Key Reference Rows */}
-            {microsite.keyFacts && microsite.keyFacts.length > 0 && (
-              <div
-                className="pt-4 border-t"
-                style={{ borderColor: 'var(--rule)' }}
-              >
-                <span className="kicker block mb-3">
-                  Key Reference Coordinates
+          {/* Top Books to Learn More Section */}
+          {microsite.books && microsite.books.length > 0 && (
+            <section
+              className="pt-8 border-t space-y-4"
+              style={{ borderColor: 'var(--rule)' }}
+            >
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <div>
+                  <span className="kicker block mb-1">Essential Reading</span>
+                  <h2
+                    className="font-serif-editorial text-2xl font-normal tracking-tight"
+                    style={{ color: 'var(--ink)' }}
+                  >
+                    Top Books to Learn More
+                  </h2>
+                </div>
+                <span className="text-xs" style={{ color: 'var(--ink-3)' }}>
+                  Curated for {microsite.topic}
                 </span>
-                <ol className="divide-y" style={{ borderColor: 'var(--rule)' }}>
-                  {microsite.keyFacts.map((fact, idx) => (
-                    <li
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {microsite.books.map((book, idx) => {
+                  const bookHref =
+                    book.url ||
+                    `https://www.google.com/search?q=${encodeURIComponent(
+                      `${book.title} ${book.author} book`
+                    )}`;
+                  return (
+                    <a
                       key={idx}
-                      className="py-2.5 flex items-baseline justify-between gap-4"
-                      style={{ borderColor: 'var(--rule)' }}
+                      href={bookHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="surface-card p-5 flex flex-col justify-between gap-3 group transition hover:opacity-90"
                     >
-                      <div>
-                        <span
-                          className="text-xs font-semibold block"
+                      <div className="space-y-1.5">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <span
+                            className="text-[11px] font-mono font-semibold"
+                            style={{ color: 'var(--accent)' }}
+                          >
+                            0{idx + 1}
+                          </span>
+                          {book.year && (
+                            <span
+                              className="text-[11px] font-mono"
+                              style={{ color: 'var(--ink-3)' }}
+                            >
+                              {book.year}
+                            </span>
+                          )}
+                        </div>
+                        <h3
+                          className="font-serif-editorial text-lg font-medium leading-snug group-hover:underline"
                           style={{ color: 'var(--ink)' }}
                         >
-                          {fact.label}
-                        </span>
-                        <span
-                          className="text-xs font-serif-editorial"
+                          {book.title} ↗
+                        </h3>
+                        <div
+                          className="text-xs font-medium"
                           style={{ color: 'var(--ink-2)' }}
                         >
-                          {fact.detail}
-                        </span>
+                          {book.author}
+                        </div>
                       </div>
-                      <span
-                        className="text-xs font-mono font-semibold shrink-0"
-                        style={{ color: 'var(--accent)' }}
+                      <p
+                        className="text-xs font-serif-editorial leading-relaxed pt-2 border-t"
+                        style={{
+                          color: 'var(--ink-2)',
+                          borderColor: 'var(--rule)',
+                        }}
                       >
-                        {fact.value}
-                      </span>
-                    </li>
-                  ))}
-                </ol>
+                        {book.whyRead}
+                      </p>
+                    </a>
+                  );
+                })}
               </div>
-            )}
+            </section>
+          )}
 
+          {/* Connected Topics & Primary Sources Footer Row */}
+          <div
+            className="pt-8 border-t grid grid-cols-1 lg:grid-cols-12 gap-8"
+            style={{ borderColor: 'var(--rule)' }}
+          >
             {/* Follow-Up Rabbit Holes */}
             {microsite.rabbitHoles && microsite.rabbitHoles.length > 0 && (
-              <div
-                className="pt-4 border-t space-y-3"
-                style={{ borderColor: 'var(--rule)' }}
-              >
+              <div className="lg:col-span-6 space-y-3">
                 <span className="kicker block">
-                  Continue Reading · Connected Topics
+                  Connected Topics
                 </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="flex flex-wrap gap-2">
                   {microsite.rabbitHoles.map((rh) => (
                     <button
                       key={rh}
                       type="button"
                       onClick={() => handleSelectTopic(rh)}
-                      className="group flex items-center justify-between p-3 rounded-xl border text-left text-xs sm:text-sm transition cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border text-xs font-medium transition cursor-pointer hover:opacity-80"
                       style={{
                         borderColor: 'var(--rule)',
                         backgroundColor: 'var(--paper-2)',
                         color: 'var(--ink)',
                       }}
                     >
-                      <span className="truncate pr-2 font-medium">{rh}</span>
+                      <span>{rh}</span>
                       <ArrowRight
-                        className="w-3.5 h-3.5 shrink-0 transition group-hover:translate-x-0.5"
+                        className="w-3 h-3 shrink-0"
                         style={{ color: 'var(--ink-3)' }}
                       />
                     </button>
@@ -883,16 +946,13 @@ export function App() {
 
             {/* Grounded Sources */}
             {microsite.sources && microsite.sources.length > 0 && (
-              <div
-                className="pt-4 border-t space-y-2.5"
-                style={{ borderColor: 'var(--rule)' }}
-              >
-                <span className="kicker block">Sources &amp; Primary Literature</span>
+              <div className="lg:col-span-6 space-y-2.5">
+                <span className="kicker block">Primary Papers &amp; References</span>
                 <ol className="divide-y" style={{ borderColor: 'var(--rule)' }}>
                   {microsite.sources.map((src, idx) => (
                     <li
                       key={idx}
-                      className="py-2.5"
+                      className="py-2"
                       style={{ borderColor: 'var(--rule)' }}
                     >
                       <a
@@ -901,7 +961,7 @@ export function App() {
                         rel="noopener noreferrer"
                         className="block group"
                       >
-                        <div className="flex items-baseline justify-between gap-2 text-xs sm:text-sm font-semibold">
+                        <div className="flex items-baseline justify-between gap-2 text-xs font-semibold">
                           <span className="group-hover:underline">
                             {src.title} ↗
                           </span>
@@ -925,8 +985,8 @@ export function App() {
               </div>
             )}
           </div>
-        </div>
-      </main>
+        </main>
+      )}
 
       {/* Footer */}
       <footer

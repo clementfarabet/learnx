@@ -44,18 +44,23 @@ const LEVEL_INSTRUCTIONS = {
 - Use rigorous formal definitions, mathematical/theoretical bounds, subtle edge cases, failure modes, and state-of-the-art research frontiers.`,
 };
 
-const SYSTEM_INSTRUCTION = `You are LearnX, a fast, rigorous interactive educational microsite synthesizer.
-Given ANY user query (a scientific concept, mathematical theorem, technology, historical event, philosophical idea, or known person/biography) and an expertise level (novice, intermediate, advanced, or pro), generate a complete, factually accurate interactive learning microsite in JSON.
+const SYSTEM_INSTRUCTION = `You are LearnX, a fast, rigorous editorial & educational microsite synthesizer.
+Given ANY user query (a scientific concept, mathematical theorem, technology, historical event, philosophical idea, or known person/biography) and an expertise level (novice, intermediate, advanced, or pro), generate a concise, factually accurate learning microsite in JSON.
 
 Keep all strings crisp, dense, and high-signal so generation is fast:
-1. "illustration":
-   - Create 4 inspectable nodes positioned across the canvas (x in [18, 82], y in [22, 78], well-spaced) with ids "n1", "n2", "n3", "n4".
+1. "visualMode":
+   - Default to "diagram" for most topics (biographies, historical events, biological processes, system architectures, philosophies, and qualitative concepts) where a clean static schematic diagram is best.
+   - Set "visualMode" to "widget" ONLY when the topic is governed by a quantitative mathematical law, physical wave/curve, or financial/economic formula where scrubbing numerical parameters genuinely adds value.
+2. "illustration":
+   - Create 4 nodes positioned across the schematic canvas (x in [18, 82], y in [22, 78], well-spaced) with ids "n1", "n2", "n3", "n4".
    - Connect them logically in "connections" using those exact node ids ("from", "to", "label").
    - Pick visualTheme from: "orbital", "network", "wave", "portrait-constellation", "architecture", "equilibrium".
-2. "widget":
-   - If the query is primarily about a KNOWN PERSON, BIOGRAPHY, or HISTORICAL EVENT/ERA, set widgetType="timeline" and populate "events" with 5 chronological milestones (year, title, summary, impactScore 50..100, deeperInsight, domainTag), and leave "parameters" as [].
-   - Otherwise, set widgetType="simulation", populate "parameters" with 3 interactive sliders (id, label, unit, min, max, step, defaultValue, description), set formulaType ("resonance-peak", "harmonic-wave", "saturation-logistic", "exponential-growth", or "inverse-power"), and leave "events" as [].
-3. Calibrate ALL text (subtitle, levelCalibrationNote, tldr, mentalModelOrFormalism, sections, and quiz) strictly to the requested expertise level (novice, intermediate, advanced, or pro).`;
+3. "widget":
+   - If visualMode="widget", set widgetType="simulation", populate "parameters" with 3 interactive sliders (id, label, unit, min, max, step, defaultValue, description), set formulaType ("resonance-peak", "harmonic-wave", "saturation-logistic", "exponential-growth", or "inverse-power"), and leave "events" as [].
+   - If visualMode="diagram", you may leave "parameters" and "events" as empty arrays [].
+4. "books":
+   - Provide 3 real, authoritative books in "books" (title, author, year, whyRead) that are the best books to read to learn more about this topic at or near the requested expertise level.
+5. Calibrate ALL text (subtitle, levelCalibrationNote, tldr, mentalModelOrFormalism, sections, and books) strictly to the requested expertise level (novice, intermediate, advanced, or pro).`;
 
 const RESPONSE_SCHEMA = {
   type: 'OBJECT',
@@ -64,6 +69,7 @@ const RESPONSE_SCHEMA = {
     subtitle: { type: 'STRING' },
     category: { type: 'STRING' },
     entityType: { type: 'STRING' },
+    visualMode: { type: 'STRING' },
     levelCalibrationNote: { type: 'STRING' },
     readingTimeMinutes: { type: 'NUMBER' },
     tldr: { type: 'STRING' },
@@ -223,18 +229,18 @@ const RESPONSE_SCHEMA = {
         'events',
       ],
     },
-    quiz: {
-      type: 'OBJECT',
-      properties: {
-        question: { type: 'STRING' },
-        options: {
-          type: 'ARRAY',
-          items: { type: 'STRING' },
+    books: {
+      type: 'ARRAY',
+      items: {
+        type: 'OBJECT',
+        properties: {
+          title: { type: 'STRING' },
+          author: { type: 'STRING' },
+          year: { type: 'STRING' },
+          whyRead: { type: 'STRING' },
         },
-        correctIndex: { type: 'NUMBER' },
-        explanation: { type: 'STRING' },
+        required: ['title', 'author', 'year', 'whyRead'],
       },
-      required: ['question', 'options', 'correctIndex', 'explanation'],
     },
     rabbitHoles: {
       type: 'ARRAY',
@@ -258,6 +264,7 @@ const RESPONSE_SCHEMA = {
     'subtitle',
     'category',
     'entityType',
+    'visualMode',
     'levelCalibrationNote',
     'readingTimeMinutes',
     'tldr',
@@ -266,7 +273,7 @@ const RESPONSE_SCHEMA = {
     'keyFacts',
     'illustration',
     'widget',
-    'quiz',
+    'books',
     'rabbitHoles',
     'sources',
   ],
@@ -433,11 +440,12 @@ Selected Expertise Level: ${level.toUpperCase()}
 
 ${levelGuide}
 
-Generate the interactive microsite JSON for "${query}" calibrated for ${level.toUpperCase()} level:
+Generate the microsite JSON for "${query}" calibrated for ${level.toUpperCase()} level:
 - 3 concise article sections (2-3 sentences per section)
 - 4 keyFacts cards
-- 4 inspectable nodes in "illustration.nodes" (ids "n1".."n4", x in 18..82, y in 22..78) and 3-4 "illustration.connections"
-- If "${query}" is a person or historical event, set widgetType="timeline" with 5 events (and parameters=[]). Otherwise set widgetType="simulation" with 3 realistic parameter sliders (and events=[]).`;
+- 4 schematic nodes in "illustration.nodes" (ids "n1".."n4", x in 18..82, y in 22..78) and 3-4 "illustration.connections"
+- Set "visualMode" to "diagram" unless "${query}" is a quantitative mathematical, physical, or financial formula where interactive parameter sliders add genuine value (in which case set "visualMode" to "widget" and populate 3 realistic "widget.parameters").
+- 3 authoritative book recommendations in "books" (title, author, year, whyRead).`;
 
         let interaction;
         let usedModel = PRIMARY_MODEL;
@@ -491,65 +499,39 @@ Generate the interactive microsite JSON for "${query}" calibrated for ${level.to
           resultObj.entityType = 'concept';
         }
 
-        // Ensure widget fallback safety
-        if (!resultObj.widget) {
-          resultObj.widget = {
-            widgetType: 'simulation',
-            title: `${resultObj.topic || query} Interactive Model`,
-            subtitle: 'Explore key parameters',
-            explanation: 'Adjust parameters to observe the system response.',
-            formulaType: 'resonance-peak',
-            parameters: [],
-            events: [],
-          };
+        // Normalize visualMode: only use 'widget' when explicitly requested AND valid parameters exist
+        const hasValidParams =
+          resultObj.widget &&
+          Array.isArray(resultObj.widget.parameters) &&
+          resultObj.widget.parameters.length >= 2;
+        if (
+          resultObj.visualMode === 'widget' &&
+          resultObj.entityType !== 'person' &&
+          hasValidParams
+        ) {
+          resultObj.visualMode = 'widget';
+          resultObj.widget.widgetType = 'simulation';
+        } else {
+          resultObj.visualMode = 'diagram';
         }
 
-        if (
-          (resultObj.entityType === 'person' ||
-            resultObj.widget.widgetType === 'timeline') &&
-          Array.isArray(resultObj.widget.events) &&
-          resultObj.widget.events.length >= 2
-        ) {
-          resultObj.widget.widgetType = 'timeline';
+        // Build clean search URLs for recommended books
+        if (Array.isArray(resultObj.books)) {
+          resultObj.books = resultObj.books.map((b) => {
+            const title = String(b.title || query).trim();
+            const author = String(b.author || '').trim();
+            return {
+              title,
+              author,
+              year: String(b.year || '').trim(),
+              whyRead: String(b.whyRead || '').trim(),
+              url: `https://www.google.com/search?q=${encodeURIComponent(
+                `${title} ${author} book`
+              )}`,
+            };
+          });
         } else {
-          resultObj.widget.widgetType = 'simulation';
-          if (
-            !Array.isArray(resultObj.widget.parameters) ||
-            resultObj.widget.parameters.length === 0
-          ) {
-            resultObj.widget.parameters = [
-              {
-                id: 'p1',
-                label: 'Primary Drive Intensity',
-                unit: '%',
-                min: 0,
-                max: 100,
-                step: 5,
-                defaultValue: 50,
-                description: 'Primary control variable driving system response.',
-              },
-              {
-                id: 'p2',
-                label: 'Coupling / Efficiency Factor',
-                unit: '%',
-                min: 10,
-                max: 100,
-                step: 5,
-                defaultValue: 75,
-                description: 'Coupling strength across interacting stages.',
-              },
-              {
-                id: 'p3',
-                label: 'Damping / Constraint Threshold',
-                unit: '%',
-                min: 0,
-                max: 100,
-                step: 5,
-                defaultValue: 30,
-                description: 'Dissipative or boundary constraint parameter.',
-              },
-            ];
-          }
+          resultObj.books = [];
         }
 
         // Build clean search URLs for grounded sources

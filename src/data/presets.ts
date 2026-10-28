@@ -224,7 +224,34 @@ export const PRESET_TOPICS: PresetTopicVariants[] = [
         'FlashAttention & GPU SRAM Tiling',
         'Rotary Position Embeddings (RoPE)',
         'Mixture of Experts (MoE) Routing',
-        'Andreij Karpathy',
+        'Andrej Karpathy',
+      ],
+      visualMode: 'diagram',
+      books: [
+        {
+          title: 'Build a Large Language Model (From Scratch)',
+          author: 'Sebastian Raschka',
+          year: '2024',
+          whyRead:
+            'Step-by-step PyTorch implementation of multi-head self-attention, causal masking, and Transformer pretraining.',
+          url: 'https://www.google.com/search?q=Build+a+Large+Language+Model+From+Scratch+Sebastian+Raschka',
+        },
+        {
+          title: 'Speech and Language Processing (3rd ed.)',
+          author: 'Dan Jurafsky & James H. Martin',
+          year: '2024',
+          whyRead:
+            'Crystal-clear academic treatment of self-attention geometry, residual streams, and language modeling foundations.',
+          url: 'https://web.stanford.edu/~jurafsky/slp3/',
+        },
+        {
+          title: 'Understanding Deep Learning',
+          author: 'Simon J. D. Prince',
+          year: '2023',
+          whyRead:
+            'Visual and mathematically rigorous chapters on Transformer blocks, positional encodings, and scaling laws.',
+          url: 'https://udlbook.github.io/udlbook/',
+        },
       ],
       sources: [
         {
@@ -583,6 +610,33 @@ export const PRESET_TOPICS: PresetTopicVariants[] = [
         'Jacquard Loom & Binary Punched Cards',
         'Bernoulli Numbers & Generating Functions',
       ],
+      visualMode: 'diagram',
+      books: [
+        {
+          title: 'Ada, the Enchantress of Numbers',
+          author: 'Betty Alexandra Toole',
+          year: '1992',
+          whyRead:
+            'Draws directly from Lovelace’s primary correspondence and notebooks to trace her mathematical development.',
+          url: 'https://www.google.com/search?q=Ada+the+Enchantress+of+Numbers+Betty+Alexandra+Toole',
+        },
+        {
+          title: 'Ada’s Algorithm',
+          author: 'James Essinger',
+          year: '2014',
+          whyRead:
+            'Accessible biographical narrative connecting the Industrial Revolution’s Jacquard looms to the birth of computing.',
+          url: 'https://www.google.com/search?q=Ada%27s+Algorithm+James+Essinger',
+        },
+        {
+          title: 'The Thrilling Adventures of Lovelace and Babbage',
+          author: 'Sydney Padua',
+          year: '2015',
+          whyRead:
+            'Deeply researched, richly illustrated breakdown of the Analytical Engine’s mechanical gearwork and Note G.',
+          url: 'https://www.google.com/search?q=The+Thrilling+Adventures+of+Lovelace+and+Babbage+Sydney+Padua',
+        },
+      ],
       sources: [
         {
           title: 'Sketch of the Analytical Engine Invented by Charles Babbage, with Notes by the Translator',
@@ -922,6 +976,33 @@ export const PRESET_TOPICS: PresetTopicVariants[] = [
         'EPR Paradox (Einstein-Podolsky-Rosen)',
         'Quantum Error Correction & Surface Codes',
       ],
+      visualMode: 'widget',
+      books: [
+        {
+          title: 'Speakable and Unspeakable in Quantum Mechanics',
+          author: 'J. S. Bell',
+          year: '1987',
+          whyRead:
+            'John Bell’s collected papers on nonlocality, hidden variables, and the conceptual foundations of quantum physics.',
+          url: 'https://www.google.com/search?q=Speakable+and+Unspeakable+in+Quantum+Mechanics+John+Bell',
+        },
+        {
+          title: 'Quantum Computation and Quantum Information',
+          author: 'Michael A. Nielsen & Isaac L. Chuang',
+          year: '2010',
+          whyRead:
+            'The definitive textbook on Bell states, CHSH inequalities, density operators, and quantum information theory.',
+          url: 'https://www.google.com/search?q=Quantum+Computation+and+Quantum+Information+Nielsen+Chuang',
+        },
+        {
+          title: 'The Age of Entanglement',
+          author: 'Louisa Gilder',
+          year: '2008',
+          whyRead:
+            'Brings the historical debates between Einstein, Bohr, Bell, Clauser, and Aspect to life for any curious reader.',
+          url: 'https://www.google.com/search?q=The+Age+of+Entanglement+Louisa+Gilder',
+        },
+      ],
       sources: [
         {
           title: 'On the Einstein Podolsky Rosen Paradox (Physics, 1964)',
@@ -1260,6 +1341,33 @@ export const PRESET_TOPICS: PresetTopicVariants[] = [
         'New Keynesian Phillips Curve',
         'Quantitative Easing vs. Floor System',
         'Yield Curve Inversion & Term Premia',
+      ],
+      visualMode: 'widget',
+      books: [
+        {
+          title: '21st Century Monetary Policy',
+          author: 'Ben S. Bernanke',
+          year: '2022',
+          whyRead:
+            'Clear historical and analytical account of how inflation targeting, QE, and forward guidance evolved since the 1970s.',
+          url: 'https://www.google.com/search?q=21st+Century+Monetary+Policy+Ben+Bernanke',
+        },
+        {
+          title: 'Monetary Policy, Inflation, and the Business Cycle',
+          author: 'Jordi Galí',
+          year: '2015',
+          whyRead:
+            'Rigorous graduate-level exposition of the 3-equation New Keynesian model, Taylor rules, and optimal policy.',
+          url: 'https://www.google.com/search?q=Monetary+Policy+Inflation+and+the+Business+Cycle+Jordi+Gali',
+        },
+        {
+          title: 'Lords of Finance: The Bankers Who Broke the World',
+          author: 'Liaquat Ahamed',
+          year: '2009',
+          whyRead:
+            'Pulitzer Prize-winning narrative showing how central bank rate decisions and monetary regimes shape global history.',
+          url: 'https://www.google.com/search?q=Lords+of+Finance+Liaquat+Ahamed',
+        },
       ],
       sources: [
         {
