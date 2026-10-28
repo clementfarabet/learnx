@@ -4,9 +4,9 @@ import dns from 'node:dns';
 
 dns.setDefaultResultOrder('ipv4first');
 
-const PORT = Number(process.env.PORT || 8792);
+const PORT = Number(process.env.LEARNX_PORT || 8792);
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const PRIMARY_MODEL = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
+const PRIMARY_MODEL = process.env.LEARNX_MODEL || 'gemini-3.8-flash';
 const FALLBACK_MODEL = 'gemini-4-argon';
 
 const LEVEL_INSTRUCTIONS = {
