@@ -375,10 +375,10 @@ export function App() {
 
           <form
             onSubmit={handleSearchSubmit}
-            className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch"
+            className="flex flex-col lg:flex-row gap-3 items-stretch"
           >
             {/* 1. Query Bar with Pre-populated Examples Dropdown */}
-            <div ref={queryContainerRef} className="relative lg:col-span-7">
+            <div ref={queryContainerRef} className="relative flex-1 min-w-0">
               <div
                 className="flex items-center rounded-full px-4 py-1.5 h-full"
                 style={{
@@ -567,19 +567,19 @@ export function App() {
 
             {/* 2. Novice-to-Pro Toggle right next to Query */}
             <div
-              className="lg:col-span-5 flex items-center justify-between gap-2 rounded-full px-3 py-1.5"
+              className="shrink-0 flex items-center justify-between gap-2 rounded-full px-2.5 py-1.5"
               style={{
                 backgroundColor: 'var(--paper-2)',
                 border: '1px solid var(--rule)',
               }}
             >
-              <span className="kicker pl-2 hidden sm:inline shrink-0">
+              <span className="kicker pl-2 hidden xl:inline shrink-0">
                 Depth
               </span>
               <div
                 role="group"
                 aria-label="Select expertise level from Novice to Pro"
-                className="grid grid-cols-4 gap-1 w-full"
+                className="flex items-center justify-between gap-1 w-full lg:w-auto"
               >
                 {LEVELS.map((lvl) => {
                   const active = lvl.id === level;
@@ -589,7 +589,7 @@ export function App() {
                       type="button"
                       onClick={() => handleLevelChange(lvl.id)}
                       disabled={isLoading}
-                      className="py-1.5 px-2 rounded-full text-xs font-semibold transition cursor-pointer text-center"
+                      className="py-1.5 px-3 sm:px-3.5 rounded-full text-xs font-semibold whitespace-nowrap transition cursor-pointer text-center"
                       style={
                         active
                           ? {
