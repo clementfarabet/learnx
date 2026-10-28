@@ -642,7 +642,7 @@ export const DynamicWidget: React.FC<Props> = ({ widget }) => {
           </svg>
 
           <div
-            className="flex items-center justify-between text-[11px] font-mono pt-1.5 border-t"
+            className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-[11px] font-mono pt-2 border-t"
             style={{ borderColor: 'var(--rule)', color: 'var(--ink-3)' }}
           >
             <span>X: {widget?.xAxisLabel || 'Control Variable'}</span>
@@ -667,7 +667,7 @@ export const DynamicWidget: React.FC<Props> = ({ widget }) => {
                   backgroundColor: 'var(--paper-2)',
                 }}
               >
-                <div className="flex items-baseline justify-between mb-1">
+                <div className="flex items-baseline justify-between gap-2 mb-1">
                   <label
                     htmlFor={`param-${p.id}`}
                     className="text-xs sm:text-sm font-semibold"
@@ -676,7 +676,7 @@ export const DynamicWidget: React.FC<Props> = ({ widget }) => {
                     {p.label}
                   </label>
                   <span
-                    className="text-xs sm:text-sm font-mono font-semibold"
+                    className="text-xs sm:text-sm font-mono font-semibold shrink-0"
                     style={{ color: 'var(--accent)' }}
                   >
                     {val} {p.unit}
@@ -698,11 +698,11 @@ export const DynamicWidget: React.FC<Props> = ({ widget }) => {
                   className="w-full cursor-pointer my-1"
                 />
                 <div
-                  className="flex items-center justify-between text-xs"
+                  className="flex items-baseline justify-between gap-3 text-xs leading-snug"
                   style={{ color: 'var(--ink-3)' }}
                 >
                   <span>{p.description}</span>
-                  <span className="font-mono shrink-0 ml-2">
+                  <span className="font-mono shrink-0">
                     {p.min}–{p.max} {p.unit}
                   </span>
                 </div>
