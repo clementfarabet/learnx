@@ -3,8 +3,10 @@ import { ExpertiseLevel, MicrositeData } from './types';
 import { LEVELS, PRESET_TOPICS, buildPresetMicrosite } from './data/presets';
 import { InteractiveIllustration } from './components/InteractiveIllustration';
 import { DynamicWidget } from './components/DynamicWidget';
+import { ChildStorybookView } from './components/ChildStorybookView';
 import { Loader2, ArrowRight, ChevronDown } from 'lucide-react';
 import { LOCALES, LocaleCode, useLanguage } from './i18n/LanguageContext';
+import { TRANSLATIONS } from './i18n/translations';
 
 export function App() {
   const { locale, setLocale, t } = useLanguage();
@@ -131,9 +133,10 @@ export function App() {
       }
 
       // 3. Call live AI backend API (/learnx/api/learn)
+      const targetT = TRANSLATIONS[targetLocale] || t;
       setIsLoading(true);
       setLoadingStage(
-        t.status.synthesizing(trimmed, t.levels[targetLevel].label)
+        targetT.status.synthesizing(trimmed, targetT.levels[targetLevel].label)
       );
 
       try {
@@ -161,6 +164,22 @@ export function App() {
         setActivePresetSlug(null);
         setMicrosite(data);
       } catch (err) {
+        // If synthesis fails and this topic corresponds to a preset, fall back gracefully to preset
+        const matchedPreset = PRESET_TOPICS.find(
+          (p) =>
+            p.slug === activePresetSlug ||
+            p.base.topic.toLowerCase() === trimmed.toLowerCase() ||
+            p.slug.replace(/-/g, ' ') === trimmed.toLowerCase()
+        );
+        if (matchedPreset) {
+          const fallbackMicrosite = buildPresetMicrosite(matchedPreset.slug, targetLevel);
+          if (fallbackMicrosite) {
+            setActivePresetSlug(matchedPreset.slug);
+            setMicrosite(fallbackMicrosite);
+            setErrorMsg(null);
+            return;
+          }
+        }
         setErrorMsg(
           err instanceof Error ? err.message : t.status.errorFallback
         );
@@ -169,7 +188,7 @@ export function App() {
         setLoadingStage('');
       }
     },
-    [aiCache, locale, t]
+    [aiCache, locale, t, activePresetSlug]
   );
 
   const handleLocaleChange = (nextLocale: LocaleCode) => {
@@ -187,11 +206,11 @@ export function App() {
     if (!microsite && !activeTopicQuery && !queryInput.trim()) {
       return;
     }
-    if (activePresetSlug && locale === 'en') {
+    if (activePresetSlug) {
       const updated = buildPresetMicrosite(activePresetSlug, newLevel);
       if (updated) {
         setMicrosite(updated);
-        return;
+        if (locale === 'en') return;
       }
     }
     const currentTopic =
@@ -214,12 +233,15 @@ export function App() {
     setQueryInput('');
     setIsDropdownOpen(false);
     setActiveTopicQuery(topicText);
-    if (presetSlug && locale === 'en') {
+    if (presetSlug) {
       const built = buildPresetMicrosite(presetSlug, level);
       if (built) {
         setActivePresetSlug(presetSlug);
         setErrorMsg(null);
         setMicrosite(built);
+        if (locale !== 'en') {
+          generateMicrosite(topicText, level, locale);
+        }
         return;
       }
     }
@@ -576,7 +598,7 @@ export function App() {
 
             {/* 2. Novice-to-Pro Toggle right next to Query */}
             <div
-              className="shrink-0 flex items-center justify-between gap-2 rounded-full px-2.5 py-1.5"
+              className="shrink-0 flex items-center justify-between gap-1.5 rounded-full px-1.5 sm:px-2.5 py-1.5"
               style={{
                 backgroundColor: 'var(--paper-2)',
                 border: '1px solid var(--rule)',
@@ -587,31 +609,37 @@ export function App() {
               </span>
               <div
                 role="group"
-                aria-label="Select expertise level from Novice to Pro"
-                className="flex items-center justify-between gap-1 w-full lg:w-auto"
+                aria-label="Select expertise level from Child to Pro"
+                className="flex flex-nowrap items-center justify-between gap-0.5 sm:gap-1 w-full lg:w-auto overflow-x-auto no-scrollbar"
               >
                 {LEVELS.map((lvl) => {
                   const active = lvl.id === level;
                   const localizedLevel = t.levels[lvl.id];
+                  const isChildBtn = lvl.id === 'child';
                   return (
                     <button
                       key={lvl.id}
                       type="button"
                       onClick={() => handleLevelChange(lvl.id)}
                       disabled={isLoading}
-                      className="py-1.5 px-3 sm:px-3.5 rounded-full text-xs font-semibold whitespace-nowrap transition cursor-pointer text-center"
+                      className="py-1.5 px-2 sm:px-3 rounded-full text-[11px] sm:text-xs font-semibold whitespace-nowrap transition cursor-pointer text-center"
                       style={
                         active
-                          ? {
-                              backgroundColor: 'var(--ink)',
-                              color: 'var(--paper)',
-                            }
+                          ? isChildBtn
+                            ? {
+                                backgroundColor: '#f59e0b',
+                                color: '#1b1a18',
+                              }
+                            : {
+                                backgroundColor: 'var(--ink)',
+                                color: 'var(--paper)',
+                              }
                           : {
                               color: 'var(--ink-2)',
                             }
                       }
                     >
-                      {localizedLevel.label}
+                      {isChildBtn ? `🎈 ${localizedLevel.label}` : localizedLevel.label}
                     </button>
                   );
                 })}
@@ -633,21 +661,6 @@ export function App() {
             </div>
           </div>
 
-          {isLoading && (
-            <div className="surface-well px-4 py-3 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <Loader2
-                  className="w-4 h-4 animate-spin shrink-0"
-                  style={{ color: 'var(--accent)' }}
-                />
-                <span className="text-xs sm:text-sm font-medium">
-                  {loadingStage}
-                </span>
-              </div>
-              <span className="kicker">AI</span>
-            </div>
-          )}
-
           {errorMsg && (
             <div className="surface-well px-4 py-3 text-xs sm:text-sm flex items-center justify-between">
               <span>{errorMsg}</span>
@@ -663,8 +676,71 @@ export function App() {
         </div>
       </section>
 
-      {/* Main Microsite Body (rendered only when a topic has been selected) */}
-      {microsite && (
+      {/* Dedicated Loading View (hides previous page while synthesizing new level/topic) */}
+      {isLoading && (
+        <main className="flex-1 max-w-3xl w-full mx-auto px-5 sm:px-8 py-16 sm:py-24 flex flex-col items-center justify-center text-center">
+          <div
+            className="w-full rounded-2xl p-8 sm:p-10 space-y-6 border"
+            style={{
+              backgroundColor: 'var(--paper-2)',
+              borderColor: 'var(--rule)',
+            }}
+          >
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full border mx-auto"
+              style={{
+                backgroundColor: 'var(--paper)',
+                borderColor: 'var(--rule)',
+              }}
+            >
+              <Loader2
+                className="w-6 h-6 animate-spin"
+                style={{ color: level === 'child' ? '#f59e0b' : 'var(--accent)' }}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="kicker" style={{ color: 'var(--accent)' }}>
+                {currentLevelMeta.badge} · {currentLevelMeta.label}
+              </div>
+              <h2
+                className="font-serif-editorial text-2xl sm:text-3xl font-normal"
+                style={{ color: 'var(--ink)' }}
+              >
+                {loadingStage}
+              </h2>
+              <p className="text-xs sm:text-sm max-w-md mx-auto" style={{ color: 'var(--ink-3)' }}>
+                {currentLevelMeta.tagline}
+              </p>
+            </div>
+
+            {/* Subtle animated skeleton lines */}
+            <div className="pt-2 space-y-2.5 max-w-md mx-auto animate-pulse">
+              <div
+                className="h-2.5 rounded-full w-3/4 mx-auto"
+                style={{ backgroundColor: 'var(--rule)' }}
+              />
+              <div
+                className="h-2.5 rounded-full w-full mx-auto"
+                style={{ backgroundColor: 'var(--rule)' }}
+              />
+              <div
+                className="h-2.5 rounded-full w-5/6 mx-auto"
+                style={{ backgroundColor: 'var(--rule)' }}
+              />
+            </div>
+          </div>
+        </main>
+      )}
+
+      {/* Main Microsite Body (rendered only when not loading and a topic has been selected) */}
+      {!isLoading && microsite && level === 'child' && (
+        <ChildStorybookView
+          microsite={microsite}
+          onSelectTopic={(rh) => handleSelectTopic(rh)}
+        />
+      )}
+
+      {!isLoading && microsite && level !== 'child' && (
         <main className="flex-1 max-w-5xl w-full mx-auto px-5 sm:px-8 py-10 space-y-12">
           {/* Editorial Cover Header */}
           <div

@@ -1,4 +1,9 @@
-export type ExpertiseLevel = 'novice' | 'intermediate' | 'advanced' | 'pro';
+export type ExpertiseLevel =
+  | 'child'
+  | 'novice'
+  | 'intermediate'
+  | 'advanced'
+  | 'pro';
 
 export interface LevelMeta {
   id: ExpertiseLevel;
@@ -164,6 +169,7 @@ export interface MicrositeData {
   sections: ArticleSection[];
   keyFacts: KeyFact[];
   illustration: MicrositeIllustration;
+  heroImageUrl?: string;
   widget?: MicrositeWidget;
   quiz?: MicrositeQuiz;
   books?: RecommendedBook[];

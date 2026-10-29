@@ -86,6 +86,18 @@ export interface LearnXTranslations {
     primarySources: string;
     footerTagline: string;
     disclaimer: string;
+    childBannerBadge: string;
+    childBigIdeaLabel: string;
+    childImagineLabel: string;
+    childStoryChaptersTitle: string;
+    childDiscoveryMapTitle: string;
+    childDiscoveryMapHint: string;
+    childMagicWordLabel: string;
+    childFunFactsTitle: string;
+    childQuizTitle: string;
+    childQuizCorrect: string;
+    childQuizTryAgain: string;
+    childNextAdventure: string;
   };
   examples: ExampleTopicTranslation[];
 }
@@ -98,7 +110,7 @@ export const TRANSLATIONS: Record<LocaleCode, LearnXTranslations> = {
       darkInk: 'Dark ink',
     },
     landing: {
-      kicker: 'Adaptive Knowledge Engine · Novice to Pro',
+      kicker: 'Adaptive Knowledge Engine · Child to Pro',
       headline: 'What would you like to learn?',
       subtitle:
         'Search any concept, theorem, system, or biography—synthesized at your chosen depth.',
@@ -116,6 +128,11 @@ export const TRANSLATIONS: Record<LocaleCode, LearnXTranslations> = {
       activeBadge: 'Active',
     },
     levels: {
+      child: {
+        label: 'Child',
+        badge: 'L0 · Storybook',
+        tagline: 'Playful picture-book stories, drawings, and easy discovery for kids',
+      },
       novice: {
         label: 'Novice',
         badge: 'L1 · Intuitive',
@@ -144,8 +161,8 @@ export const TRANSLATIONS: Record<LocaleCode, LearnXTranslations> = {
     },
     microsite: {
       minRead: (mins) => `${mins} min read`,
-      diagramKicker: 'Editorial Figure & Schematic Diagram',
-      diagramFallbackTitle: 'Conceptual Schematic',
+      diagramKicker: 'Chronology & Key Milestones',
+      diagramFallbackTitle: 'Historical & Conceptual Timeline',
       nodeGroups: {
         input: 'Input · Driver',
         core: 'Core Mechanism',
@@ -172,9 +189,21 @@ export const TRANSLATIONS: Record<LocaleCode, LearnXTranslations> = {
       curatedFor: (topic) => `Curated for ${topic}`,
       connectedTopics: 'Connected Topics',
       primarySources: 'Primary Papers & References',
-      footerTagline: 'LearnX · Adaptive Interactive Microsites (Novice to Pro)',
+      footerTagline: 'LearnX · Adaptive Interactive Microsites (Child to Pro)',
       disclaimer:
         'Disclaimer: These projects are built for fun — take all AI-generated results and syntheses with a grain of salt.',
+      childBannerBadge: 'Illustrated Storybook Mode',
+      childBigIdeaLabel: 'The Big Secret in One Sentence!',
+      childImagineLabel: 'Picture This in Your Mind!',
+      childStoryChaptersTitle: 'Storybook Adventure (Step by Step)',
+      childDiscoveryMapTitle: 'Interactive Picture Map',
+      childDiscoveryMapHint: 'Tap any drawing card below to peek inside how it works!',
+      childMagicWordLabel: 'Magic Word:',
+      childFunFactsTitle: '4 Cool Pocket Facts!',
+      childQuizTitle: 'Quick Riddle Game: Can You Guess?',
+      childQuizCorrect: 'Hooray! You nailed it!',
+      childQuizTryAgain: 'Almost! Give another answer a tap!',
+      childNextAdventure: 'What Should We Explore Next?',
     },
     examples: [
       {
@@ -259,6 +288,11 @@ export const TRANSLATIONS: Record<LocaleCode, LearnXTranslations> = {
       activeBadge: 'Actif',
     },
     levels: {
+      child: {
+        label: 'Enfant',
+        badge: 'N0 · Livre d’images',
+        tagline: 'Histoires illustrées, dessins ludiques et découvertes simples pour les enfants',
+      },
       novice: {
         label: 'Novice',
         badge: 'N1 · Intuitif',
@@ -288,8 +322,8 @@ export const TRANSLATIONS: Record<LocaleCode, LearnXTranslations> = {
     },
     microsite: {
       minRead: (mins) => `${mins} min de lecture`,
-      diagramKicker: 'Figure Éditoriale & Schéma Conceptuel',
-      diagramFallbackTitle: 'Schéma Conceptuel',
+      diagramKicker: 'Chronologie & Jalons Clés',
+      diagramFallbackTitle: 'Repères Chronologiques & Conceptuels',
       nodeGroups: {
         input: 'Entrée · Moteur',
         core: 'Mécanisme Central',
@@ -316,9 +350,21 @@ export const TRANSLATIONS: Record<LocaleCode, LearnXTranslations> = {
       curatedFor: (topic) => `Sélection pour ${topic}`,
       connectedTopics: 'Sujets Connexes',
       primarySources: 'Publications Primaires & Références',
-      footerTagline: 'LearnX · Microsites Interactifs Adaptatifs (Novice à Expert)',
+      footerTagline: 'LearnX · Microsites Interactifs Adaptatifs (Enfant à Expert)',
       disclaimer:
         'Avertissement : Ces projets sont créés pour le plaisir — prenez tous les résultats et synthèses générés par l’IA avec du recul.',
+      childBannerBadge: 'Mode Livre d’Images Illustré',
+      childBigIdeaLabel: 'Le Grand Secret en Une Phrase !',
+      childImagineLabel: 'Imagine Cela dans Ta Tête !',
+      childStoryChaptersTitle: 'L’Histoire Étape par Étape',
+      childDiscoveryMapTitle: 'Carte Illustrée Interactive',
+      childDiscoveryMapHint: 'Touche chaque dessin ci-dessous pour découvrir son secret !',
+      childMagicWordLabel: 'Mot Magique :',
+      childFunFactsTitle: '4 Super Découvertes à Retenir !',
+      childQuizTitle: 'Petit Jeu Devinette : Sauras-tu Trouver ?',
+      childQuizCorrect: 'Bravo ! C’est la bonne réponse !',
+      childQuizTryAgain: 'Presque ! Essaie une autre réponse !',
+      childNextAdventure: 'Quelle Sera Notre Prochaine Aventure ?',
     },
     examples: [
       {
@@ -403,6 +449,11 @@ export const TRANSLATIONS: Record<LocaleCode, LearnXTranslations> = {
       activeBadge: 'Aktiv',
     },
     levels: {
+      child: {
+        label: 'Kind',
+        badge: 'L0 · Bilderbuch',
+        tagline: 'Spielerische Bildergeschichten, Zeichnungen und einfaches Entdecken für Kinder',
+      },
       novice: {
         label: 'Einsteiger',
         badge: 'L1 · Intuitiv',
@@ -432,8 +483,8 @@ export const TRANSLATIONS: Record<LocaleCode, LearnXTranslations> = {
     },
     microsite: {
       minRead: (mins) => `${mins} Min. Lesezeit`,
-      diagramKicker: 'Redaktionelle Abbildung & Schemazeichnung',
-      diagramFallbackTitle: 'Konzeptschema',
+      diagramKicker: 'Chronologie & Meilensteine',
+      diagramFallbackTitle: 'Historische & Konzeptuelle Zeitleiste',
       nodeGroups: {
         input: 'Eingang · Treiber',
         core: 'Kernmechanismus',
@@ -460,9 +511,21 @@ export const TRANSLATIONS: Record<LocaleCode, LearnXTranslations> = {
       curatedFor: (topic) => `Kuratiert für ${topic}`,
       connectedTopics: 'Verwandte Themen',
       primarySources: 'Primärliteratur & Quellen',
-      footerTagline: 'LearnX · Adaptive Interaktive Microsites (Einsteiger bis Experte)',
+      footerTagline: 'LearnX · Adaptive Interaktive Microsites (Kind bis Experte)',
       disclaimer:
         'Hinweis: Diese Projekte sind aus Freude am Experimentieren entstanden — betrachten Sie alle KI-generierten Ergebnisse mit einer gesunden Portion Skepsis.',
+      childBannerBadge: 'Illustrierter Bilderbuch-Modus',
+      childBigIdeaLabel: 'Das große Geheimnis in einem Satz!',
+      childImagineLabel: 'Stell dir das mal vor!',
+      childStoryChaptersTitle: 'Die Geschichte Schritt für Schritt',
+      childDiscoveryMapTitle: 'Interaktive Entdeckerkarte',
+      childDiscoveryMapHint: 'Tippe auf jedes Bild, um sein Geheimnis zu entdecken!',
+      childMagicWordLabel: 'Zauberwort:',
+      childFunFactsTitle: '4 Coole Entdecker-Fakten!',
+      childQuizTitle: 'Rätsel-Spiel: Weißt du die Antwort?',
+      childQuizCorrect: 'Juhu! Genau richtig!',
+      childQuizTryAgain: 'Fast! Probier eine andere Antwort aus!',
+      childNextAdventure: 'Was wollen wir als Nächstes entdecken?',
     },
     examples: [
       {
@@ -546,6 +609,11 @@ export const TRANSLATIONS: Record<LocaleCode, LearnXTranslations> = {
       activeBadge: '当前',
     },
     levels: {
+      child: {
+        label: '少儿',
+        badge: 'L0 · 绘本故事',
+        tagline: '趣味手绘插画、互动小故事与通俗寻宝，专为少儿设计',
+      },
       novice: {
         label: '入门',
         badge: 'L1 · 直觉通俗',
@@ -574,8 +642,8 @@ export const TRANSLATIONS: Record<LocaleCode, LearnXTranslations> = {
     },
     microsite: {
       minRead: (mins) => `${mins} 分钟阅读`,
-      diagramKicker: '专题图解与架构示意图',
-      diagramFallbackTitle: '概念架构图',
+      diagramKicker: '发展脉络与关键里程碑',
+      diagramFallbackTitle: '历史与核心演进时间线',
       nodeGroups: {
         input: '输入 · 驱动',
         core: '核心机制',
@@ -601,9 +669,21 @@ export const TRANSLATIONS: Record<LocaleCode, LearnXTranslations> = {
       curatedFor: (topic) => `为“${topic}”精选`,
       connectedTopics: '关联主题探索',
       primarySources: '原始文献与参考资料',
-      footerTagline: 'LearnX · 自适应交互式知识微站（从入门到专家）',
+      footerTagline: 'LearnX · 自适应交互式知识微站（从少儿绘本到专家）',
       disclaimer:
         '免责声明：本项目纯属兴趣之作 —— 所有 AI 生成的内容与模型仅供参考，请保持审慎思考。',
+      childBannerBadge: '趣味手绘绘本模式',
+      childBigIdeaLabel: '一句话揭开大秘密！',
+      childImagineLabel: '在脑海里画一幅画！',
+      childStoryChaptersTitle: '分步图文故事大冒险',
+      childDiscoveryMapTitle: '互动寻宝图解',
+      childDiscoveryMapHint: '点击下方任意插画卡片，看看它有什么神奇本领！',
+      childMagicWordLabel: '神奇词汇：',
+      childFunFactsTitle: '4 个趣味口袋小知识！',
+      childQuizTitle: '趣味小谜题：你能猜对吗？',
+      childQuizCorrect: '太棒啦！回答完全正确！',
+      childQuizTryAgain: '差一点点！再点另一个答案试试看！',
+      childNextAdventure: '下一站我们去探索什么？',
     },
     examples: [
       {
@@ -688,6 +768,11 @@ export const TRANSLATIONS: Record<LocaleCode, LearnXTranslations> = {
       activeBadge: '表示中',
     },
     levels: {
+      child: {
+        label: 'キッズ',
+        badge: 'L0 · 絵本モード',
+        tagline: '楽しいイラストと物語でわかる、子ども向けインタラクティブ絵本',
+      },
       novice: {
         label: '初級',
         badge: 'L1 · 直感的',
@@ -716,8 +801,8 @@ export const TRANSLATIONS: Record<LocaleCode, LearnXTranslations> = {
     },
     microsite: {
       minRead: (mins) => `読了約 ${mins} 分`,
-      diagramKicker: '概念図・アーキテクチャ図解',
-      diagramFallbackTitle: '概念スキーム図',
+      diagramKicker: '年表・主要マイルストーン',
+      diagramFallbackTitle: '歴史・概念のタイムライン',
       nodeGroups: {
         input: '入力 · ドライバー',
         core: '中核メカニズム',
@@ -744,9 +829,21 @@ export const TRANSLATIONS: Record<LocaleCode, LearnXTranslations> = {
       curatedFor: (topic) => `「${topic}」のための厳選書`,
       connectedTopics: '関連トピック',
       primarySources: '主要論文・一次資料',
-      footerTagline: 'LearnX · アダプティブ学習マイクロサイト（初級からプロまで）',
+      footerTagline: 'LearnX · アダプティブ学習マイクロサイト（キッズからプロまで）',
       disclaimer:
         '免責事項：これらのプロジェクトは楽しみのために作られたものです — AIによる生成結果はすべて参考程度にご覧ください。',
+      childBannerBadge: 'イラスト絵本モード',
+      childBigIdeaLabel: 'ひとことで言うとこんなヒミツ！',
+      childImagineLabel: '頭の中でイメージしてみよう！',
+      childStoryChaptersTitle: 'ステップでわかる！おはなし冒険',
+      childDiscoveryMapTitle: 'タッチして遊べるイラストマップ',
+      childDiscoveryMapHint: '気になるイラストカードをタップして、しくみをのぞいてみよう！',
+      childMagicWordLabel: '魔法のことば：',
+      childFunFactsTitle: '友だちに話したくなる4つのひみつ！',
+      childQuizTitle: 'わくわくクイズ：正解はどれかな？',
+      childQuizCorrect: '大正解！すごい！',
+      childQuizTryAgain: 'おしい！もうひとつの答えをタップしてみてね！',
+      childNextAdventure: 'つぎはどんな不思議を探検する？',
     },
     examples: [
       {

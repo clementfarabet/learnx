@@ -2,6 +2,16 @@ import { ExpertiseLevel, LevelMeta, MicrositeData } from '../types';
 
 export const LEVELS: LevelMeta[] = [
   {
+    id: 'child',
+    label: 'Child',
+    shortLabel: 'Child',
+    badge: 'L0 · Storybook',
+    tagline: 'Playful stories, hand-drawn pictures, and easy discovery for kids',
+    description:
+      'Turns any topic into an illustrated picture-book adventure with friendly drawings, simple words, and a fun riddle.',
+    accentColor: '#ec4899',
+  },
+  {
     id: 'novice',
     label: 'Novice',
     shortLabel: 'Novice',
@@ -106,69 +116,53 @@ export const PRESET_TOPICS: PresetTopicVariants[] = [
         },
       ],
       illustration: {
-        title: 'Multi-Head Scaled Dot-Product Routing',
+        title: 'From Recurrent Bottlenecks to Self-Attention (2014–2022)',
         caption:
-          'Click any node in the architecture diagram to inspect how tokens project into Query, Key, and Value spaces and dynamically route context.',
+          'Key chronological milestones tracing how sequence modeling evolved from sequential recurrent networks to parallel multi-head self-attention.',
         visualTheme: 'architecture',
         nodes: [
           {
-            id: 'tokens',
-            label: 'Token Embeddings + Pos',
-            sublabel: 'X ∈ ℝ^(N×d)',
-            x: 16,
-            y: 50,
+            id: 'bahdanau-2014',
+            label: 'Neural Machine Translation Attention',
+            sublabel: '2014 · Bahdanau et al.',
+            x: 20,
+            y: 25,
             detail:
-              'Input words or subwords are converted into continuous vectors and combined with positional encodings (such as RoPE) so order is preserved.',
+              'Introduces soft content-based alignment over RNN hidden states so decoders can look back at source words instead of compressing everything into one fixed vector.',
             group: 'input',
           },
           {
-            id: 'qkv',
-            label: 'Q / K / V Projections',
-            sublabel: 'Learned Linear Maps',
+            id: 'vaswani-2017',
+            label: '“Attention Is All You Need”',
+            sublabel: '2017 · Vaswani et al.',
             x: 40,
-            y: 26,
+            y: 45,
             detail:
-              'Each token simultaneously plays three roles: Query (what it is looking for), Key (what it advertises), and Value (the information it transmits).',
+              'Replaces recurrence and convolutions entirely with scaled dot-product self-attention and multi-head routing, enabling full sequence parallelism on GPUs.',
             group: 'core',
           },
           {
-            id: 'scores',
-            label: 'Attention Matrix',
-            sublabel: 'softmax(QKᵀ / √d_k)',
-            x: 52,
-            y: 72,
+            id: 'foundation-2018',
+            label: 'Pre-Trained Foundation Models (BERT & GPT)',
+            sublabel: '2018–2020 · Scaling Laws',
+            x: 60,
+            y: 65,
             detail:
-              'All token pairs compute dot-product similarity scores, scaled by 1/√d_k to prevent softmax saturation and vanishing gradients.',
+              'Bidirectional encoders and autoregressive decoders demonstrate that scaling self-attention parameters and pre-training tokens unlocks emergent reasoning.',
             group: 'core',
           },
           {
-            id: 'multihead',
-            label: 'Multi-Head Subspaces',
-            sublabel: 'h Parallel Heads',
-            x: 68,
-            y: 34,
+            id: 'flash-2022',
+            label: 'FlashAttention & Long-Context Windows',
+            sublabel: '2022–Present · IO-Aware Tiling',
+            x: 80,
+            y: 85,
             detail:
-              'Multiple attention heads attend to distinct syntactic, semantic, and positional relationships in parallel low-dimensional subspaces.',
-            group: 'core',
-          },
-          {
-            id: 'output',
-            label: 'Contextualized Representation',
-            sublabel: 'Residual + FFN',
-            x: 86,
-            y: 52,
-            detail:
-              'Weighted value vectors are concatenated, projected via W_O, and passed through residual normalization and feed-forward layers.',
+              'Reorganizes exact attention computation inside fast GPU SRAM without materializing the N×N matrix in HBM, scaling context windows from 2K to millions of tokens.',
             group: 'output',
           },
         ],
-        connections: [
-          { from: 'tokens', to: 'qkv', label: 'Project W_Q, W_K, W_V' },
-          { from: 'qkv', to: 'scores', label: 'Pairwise Dot Product' },
-          { from: 'scores', to: 'multihead', label: 'Softmax Weights' },
-          { from: 'qkv', to: 'multihead', label: 'Value Vectors V' },
-          { from: 'multihead', to: 'output', label: 'Concat & Project W_O' },
-        ],
+        connections: [],
       },
       widget: {
         widgetType: 'simulation',
@@ -277,6 +271,54 @@ export const PRESET_TOPICS: PresetTopicVariants[] = [
       grounded: true,
     },
     byLevel: {
+      child: {
+        subtitle:
+          'How a computer reads a whole story at once by using magical flashlights to connect friendly words together!',
+        levelCalibrationNote:
+          'Child Storybook Mode: Told with a classroom flashlight game, simple picture steps, and a fun riddle!',
+        tldr: 'Imagine every word in a storybook is a little character holding a flashlight. When a tricky word like “it” shows up, it shines its flashlight back on the earlier words to ask, “Hey! Who am I talking about?” That team-up superpower is called Self-Attention!',
+        mentalModelOrFormalism: {
+          label: 'Picture This! · The Word Flashlight Game',
+          content:
+            'In the sentence “The puppy chased the ball because it was bouncy,” how do you know “it” means the ball and not the puppy? Because “bouncy” and “ball” wave at each other! Self-Attention lets computer words shine colorful beams of light on their best friends in a sentence.',
+          formulaOrCode:
+            '1. Ask a Question 🔎 → 2. Shine the Flashlight 🔦 → 3. Understand the Story! 🌟',
+        },
+        sections: [
+          {
+            heading: '1. Reading the Whole Page at Once!',
+            body: 'Imagine trying to read a picture book through a tiny straw, one word at a time—by the end of the page, you might forget the beginning! Self-Attention lets the computer open its eyes wide and look at every word on the page at the exact same time.',
+            highlightCallout:
+              'Even if two words are far apart on a giant page, they can high-five each other in one jump!',
+            keyTerm: 'Super-Wide Eyes',
+          },
+          {
+            heading: '2. Three Magic Badges: Question, Name Tag & Treasure',
+            body: 'Every word wears three fun badges: a Question Badge (“Who can help me?”), a Name Tag (“Here is what kind of word I am!”), and a Treasure Chest (“Here is my meaning!”). When a Question matches a Name Tag, the words share their treasure!',
+            highlightCallout:
+              'That is how the word “bark” knows if it means a noisy dog 🐶 or the outside of a tree 🌳!',
+            keyTerm: 'Three Magic Badges',
+          },
+          {
+            heading: '3. A Team of Colorful Flashlights',
+            body: 'Instead of using just one flashlight, the computer uses a whole rainbow of flashlights at the same time! A blue flashlight finds who is doing the action, a yellow flashlight checks if the sentence is funny or serious, and a purple one finds rhymes!',
+            keyTerm: 'Rainbow Flashlights',
+          },
+        ],
+        quiz: {
+          question:
+            'In “The kitten climbed the tall tree because it was scared,” who does the word “it” shine its brightest flashlight on?',
+          options: [
+            'The kitten! Because kittens can feel scared, while trees cannot.',
+            'The clouds in the sky',
+            'A submarine under the ocean',
+            'It turns off all the lights and goes to sleep',
+          ],
+          correctIndex: 0,
+          explanation:
+            'Spot on! The word “scared” helps “it” shine its brightest beam right back on “kitten.”',
+        },
+      },
       novice: {
         subtitle: 'How AI reads an entire page at once by letting every word spotlight the words that matter most to it.',
         levelCalibrationNote:
@@ -491,58 +533,63 @@ export const PRESET_TOPICS: PresetTopicVariants[] = [
         },
       ],
       illustration: {
-        title: 'The Analytical Engine & Note G Conceptual Map',
+        title: 'Ada Lovelace & The Analytical Engine (1815–1950)',
         caption:
-          'Click any node to explore how Ada Lovelace bridged Jacquard’s punched-card looms, Babbage’s mechanical architecture, and universal symbolic computation.',
+          'Chronology of Ada Lovelace’s mathematical formation, collaboration with Charles Babbage, and enduring influence on modern computer science.',
         visualTheme: 'portrait-constellation',
         nodes: [
           {
-            id: 'jacquard',
-            label: 'Jacquard Punched Cards',
-            sublabel: 'Program vs. Data Separation',
+            id: 'diff-1833',
+            label: 'Meets Charles Babbage & the Difference Engine',
+            sublabel: '1833 · London',
             x: 18,
-            y: 30,
+            y: 25,
             detail:
-              'Lovelace famously wrote that the Analytical Engine “weaves algebraic patterns just as the Jacquard-loom weaves flowers and leaves.”',
+              'At age 17, Lovelace inspects Babbage’s working prototype calculator and immediately grasps the mathematical method of finite differences.',
             group: 'input',
           },
           {
-            id: 'store-mill',
-            label: 'The Store & The Mill',
-            sublabel: 'Memory & CPU Precursor',
-            x: 42,
-            y: 66,
+            id: 'jacquard-1834',
+            label: 'Tours Industrial Jacquard Silk Looms',
+            sublabel: '1834 · Northern England',
+            x: 38,
+            y: 45,
             detail:
-              'Babbage’s hardware separated “The Store” (1,000 mechanical column registers) from “The Mill” (the arithmetic processing unit).',
+              'Observes mechanical looms controlled by chains of punched cards—forming her physical model of discrete binary instructions separate from hardware.',
             group: 'core',
           },
           {
-            id: 'noteg',
-            label: 'Note G Trace Table',
-            sublabel: 'Bernoulli Recursion (1843)',
-            x: 54,
-            y: 26,
+            id: 'demorgan-1840',
+            label: 'Symbolic Logic Studies with Augustus De Morgan',
+            sublabel: '1840 · University of London',
+            x: 58,
+            y: 65,
             detail:
-              'A step-by-step execution table tracking Operation Cards, Variable Cards (V1–V13), loop counters, and intermediate state mutations.',
+              'Studies advanced calculus, functional equations, and abstract symbolic algebra with pioneer logician Augustus De Morgan.',
             group: 'core',
           },
           {
-            id: 'poetical',
-            label: 'Universal Symbol Manipulation',
-            sublabel: 'Beyond Number Crunching',
-            x: 82,
-            y: 44,
+            id: 'noteg-1843',
+            label: 'Publishes Notes A–G & the Bernoulli Algorithm',
+            sublabel: '1843 · Taylor’s Scientific Memoirs',
+            x: 75,
+            y: 80,
             detail:
-              'Lovelace realized that any entity whose mutual relations can be expressed by abstract operations (including musical harmony) can be computed.',
+              'Authors the first published computer algorithm with branching loops, register trace tables, and the vision of general symbolic computing.',
+            group: 'output',
+          },
+          {
+            id: 'turing-1950',
+            label: 'Alan Turing Engages “Lady Lovelace’s Objection”',
+            sublabel: '1950 · Mind (Vol. 59)',
+            x: 90,
+            y: 90,
+            detail:
+              'Turing cites Lovelace’s Note G in his foundational paper “Computing Machinery and Intelligence,” cementing her role at the root of AI philosophy.',
             group: 'output',
           },
         ],
-        connections: [
-          { from: 'jacquard', to: 'store-mill', label: 'Operation & Variable Cards' },
-          { from: 'store-mill', to: 'noteg', label: 'Register State Execution' },
-          { from: 'noteg', to: 'poetical', label: 'General Symbolic Abstraction' },
-          { from: 'jacquard', to: 'poetical', label: 'Pattern Encoding' },
-        ],
+        connections: [],
       },
       widget: {
         widgetType: 'timeline',
@@ -655,6 +702,54 @@ export const PRESET_TOPICS: PresetTopicVariants[] = [
       grounded: true,
     },
     byLevel: {
+      child: {
+        subtitle:
+          'The girl who loved poetry and puzzles—and wrote the very first computer program 100 years before computers had plugs!',
+        levelCalibrationNote:
+          'Child Storybook Mode: Told through weaving looms, clockwork gears, and Ada’s imagination!',
+        tldr: 'Long ago in the 1840s, before lightbulbs or telephones existed, Ada Lovelace looked at a giant machine made of brass gears and realized a wonderful secret: if a machine can follow rules with numbers, it could also play music, paint patterns, and help scientists!',
+        mentalModelOrFormalism: {
+          label: 'Picture This! · A Music Box Made of Punched Cards',
+          content:
+            'Have you ever seen a music box that plays a song by reading little bumps on a spinning cylinder? Ada saw weaving looms that used paper cards with holes punched in them to weave pretty flowers into cloth—and she used those same punched cards to teach a gear machine how to think step by step!',
+          formulaOrCode:
+            'Punched Paper Cards 🎟️ → Spinning Brass Gears ⚙️ → Music, Math & Magic! 🎶',
+        },
+        sections: [
+          {
+            heading: '1. Half Poet, Half Scientist!',
+            body: 'When Ada was a little girl in London, she dreamed of building a flying mechanical horse powered by steam! Her mom taught her math and science, while her dad was a famous poet. Ada mixed both superpowers together and called it “Poetical Science.”',
+            highlightCallout:
+              'Ada believed imagination and math were best friends that belonged together!',
+            keyTerm: 'Poetical Science',
+          },
+          {
+            heading: '2. More Than Just a Giant Calculator',
+            body: 'Her friend Charles Babbage designed a huge steam-powered machine called the Analytical Engine just to add and multiply big numbers. But Ada looked closer and said: “Wait! If numbers can stand for musical notes or letters, this machine could compose symphonies!”',
+            keyTerm: 'Beyond Numbers',
+          },
+          {
+            heading: '3. The World’s First Computer Recipe',
+            body: 'In 1843, Ada wrote down a clever step-by-step recipe (which we now call an algorithm or computer program) showing how the gears could repeat steps in a loop to solve a tricky math puzzle all by itself. That made her the world’s first computer programmer!',
+            highlightCallout:
+              'She even invented the “loop”—telling the machine to go back and repeat a step until the job is done!',
+            keyTerm: 'The First Program',
+          },
+        ],
+        quiz: {
+          question:
+            'What did Ada Lovelace use to give step-by-step instructions to the giant gear machine?',
+          options: [
+            'Paper cards with holes punched in them—just like a pattern loom!',
+            'A touchscreen tablet with Wi-Fi',
+            'A magic wand made of chocolate',
+            'Whispering secrets into a seashell',
+          ],
+          correctIndex: 0,
+          explanation:
+            'Bravo! She used chains of punched cardboard cards—where the holes told the brass gears which levers to move!',
+        },
+      },
       novice: {
         subtitle: 'The 19th-century mathematician who saw that a machine built of gears could compose music and process any symbol—a century before electronic computers.',
         levelCalibrationNote:
@@ -1021,6 +1116,54 @@ export const PRESET_TOPICS: PresetTopicVariants[] = [
       grounded: true,
     },
     byLevel: {
+      child: {
+        subtitle:
+          'How two tiny particles of light can become best friends that dance together—even when they are far apart in space!',
+        levelCalibrationNote:
+          'Child Storybook Mode: Told with magic spinning coins, twin stars, and a detective game!',
+        tldr: 'In the ultra-tiny quantum world, two particles of light can become “entangled”—like magical twin dancers! Even if one flies to the Moon and the other stays on Earth, the moment you peek at one spinning coin and see Heads, its twin immediately lands on the matching side!',
+        mentalModelOrFormalism: {
+          label: 'Picture This! · Magical Twin Spinning Coins',
+          content:
+            'If you put a red sock in your backpack and a blue sock in your friend’s backpack, they were already red and blue from the start. But quantum twin particles are like two glowing coins that keep spinning in rainbow colors until you look—and then they agree on their answer from miles away!',
+          formulaOrCode:
+            'Create Twin Particles ✨ → Send Them Far Apart 🚀 → Peek at One, They Match! 🪙',
+        },
+        sections: [
+          {
+            heading: '1. Einstein’s “Spooky” Puzzle',
+            body: 'Even the famous scientist Albert Einstein scratched his bushy white hair over this! He called it “spooky action at a distance” because he couldn’t believe two tiny particles could coordinate their dance without sending a secret note between them.',
+            highlightCallout:
+              'Einstein thought the particles were hiding secret cheat-sheets in their pockets!',
+            keyTerm: 'Spooky Twins',
+          },
+          {
+            heading: '2. John Bell’s Clever Detective Game',
+            body: 'A scientist named John Bell invented a clever game using tilted sunglasses (polarizers) for particles of light. He proved that if the particles were just reading secret cheat-sheets, they could only match a certain number of times—but in real labs, the quantum twins beat that score every time!',
+            keyTerm: 'The Detective Test',
+          },
+          {
+            heading: '3. Can We Use It Like a Super-Fast Walkie-Talkie?',
+            body: 'Here is the funny twist: when you look at just your own particle, its flips look totally random like a regular coin toss! You only see the magical twin pattern when you and your friend meet up later and compare your notebooks.',
+            highlightCallout:
+              'Today, scientists use entangled twins to build unhackable secret codes and quantum computers!',
+            keyTerm: 'Secret Quantum Codes',
+          },
+        ],
+        quiz: {
+          question:
+            'What happens when you measure one entangled twin particle while its partner is far away?',
+          options: [
+            'They instantly show matching results when you compare your notes!',
+            'They turn into giant marshmallows',
+            'They forget each other completely',
+            'They make a loud trumpet sound in outer space',
+          ],
+          correctIndex: 0,
+          explanation:
+            'You got it! Because they share one connected quantum state, their outcomes match up across any distance.',
+        },
+      },
       novice: {
         subtitle: 'Why two quantum particles can act like synchronized coins across the galaxy—and why it’s even stranger than hidden instructions.',
         levelCalibrationNote:
@@ -1387,6 +1530,54 @@ export const PRESET_TOPICS: PresetTopicVariants[] = [
       grounded: true,
     },
     byLevel: {
+      child: {
+        subtitle:
+          'How the giant piggy bank of a country keeps the price of ice cream, toys, and groceries from jumping too fast!',
+        levelCalibrationNote:
+          'Child Storybook Mode: Told with an ice-cream shop, piggy banks, and a town thermostat!',
+        tldr: 'Imagine if everyone in town suddenly had tons of extra coins to spend, and the bakery only had ten cupcakes—the baker would raise the price of cupcakes super fast! That price jump is called inflation. The Central Bank helps keep prices calm by making piggy-bank saving more rewarding!',
+        mentalModelOrFormalism: {
+          label: 'Picture This! · The Town’s Giant Thermostat',
+          content:
+            'Think of the economy like a busy classroom. If it gets way too hot and frantic (prices rising too fast!), the Central Bank turns on the cool breeze by raising “interest rates”—a bonus reward you get for keeping coins in your savings piggy bank instead of spending them all at once!',
+          formulaOrCode:
+            'Prices Too High 🍦 → Bigger Piggy-Bank Bonus 🐷 → Calmer Shopping 🛒 → Steady Prices! ⚖️',
+        },
+        sections: [
+          {
+            heading: '1. What Is Inflation? (The Ice-Cream Cone Story)',
+            body: 'Suppose an ice-cream scoop costs $2 today, but next year the exact same scoop costs $4. The ice cream didn’t get twice as big—instead, each dollar buys a little less! When prices across lots of stores climb up together, economists call that inflation.',
+            highlightCallout:
+              'A tiny bit of price growth (around 2% a year) is healthy, like a bicycle rolling gently forward!',
+            keyTerm: 'Price Balloon',
+          },
+          {
+            heading: '2. The Piggy-Bank Reward Knob (Interest Rates)',
+            body: 'The Central Bank is like the referee for all the regular banks. It has a special dial called the Interest Rate. When it turns the dial UP, your piggy bank pays you extra bonus coins for saving, and borrowing money to buy big things becomes more expensive.',
+            keyTerm: 'Piggy-Bank Bonus',
+          },
+          {
+            heading: '3. Steering a Giant Ship Gently',
+            body: 'If the referee turns the dial up too hard, stores get too quiet and people might lose jobs. If they turn it too little, prices keep zooming up. So central bankers watch carefully to help the whole town land smoothly like a gentle airplane!',
+            highlightCallout:
+              'Keeping both prices steady AND jobs plentiful is called the “Soft Landing”!',
+            keyTerm: 'Smooth Landing',
+          },
+        ],
+        quiz: {
+          question:
+            'If prices at the toy and ice-cream shops are zooming up way too fast, what can the Central Bank do to help cool things down?',
+          options: [
+            'Turn UP the piggy-bank reward (interest rate) so people save more and spend a little slower!',
+            'Throw away all the piggy banks in town',
+            'Make every Tuesday a mandatory ice-cream eating contest',
+            'Paint all coins purple',
+          ],
+          correctIndex: 0,
+          explanation:
+            'Awesome job! Raising the interest rate rewards saving and slows down the rush of spending so prices calm down.',
+        },
+      },
       novice: {
         subtitle: 'How the central bank acts as the thermostat of the economy—cooling runaway prices or warming up job growth.',
         levelCalibrationNote:
@@ -1569,15 +1760,336 @@ export const PRESET_TOPICS: PresetTopicVariants[] = [
   },
 ];
 
+const CHILD_PRESET_EXTRAS: Record<
+  string,
+  Pick<MicrositeData, 'keyFacts' | 'illustration' | 'rabbitHoles'>
+> = {
+  'transformer-attention': {
+    rabbitHoles: [
+      'How Talking Robots Learn Words',
+      'Secret Codes & Ciphers',
+      'How Video Game Characters Think',
+      'How Your Brain Remembers Stories',
+    ],
+    keyFacts: [
+      {
+        label: 'Birthday',
+        value: '2017',
+        detail: 'Invented by a team of scientists who wanted computers to read whole stories at once!',
+      },
+      {
+        label: 'Superpower',
+        value: 'All-at-Once Eyes',
+        detail: 'Looks at every word on the page together instead of creeping word by word.',
+      },
+      {
+        label: 'Secret Tool',
+        value: '3 Magic Badges',
+        detail: 'Every word uses a Question Badge, a Name Tag, and a Meaning Treasure Chest!',
+      },
+      {
+        label: 'Teamwork',
+        value: 'Rainbow Beams',
+        detail: 'Many colorful flashlights work together to spot rhymes, actions, and feelings.',
+      },
+    ],
+    illustration: {
+      title: 'How Words Shine Flashlights on Their Friends!',
+      caption: 'Tap any character badge below to see how words team up to understand a story!',
+      visualTheme: 'architecture',
+      nodes: [
+        {
+          id: 'tokens',
+          label: '1. Words Line Up',
+          sublabel: 'Ready on Stage!',
+          x: 18,
+          y: 48,
+          detail: 'Every word in the sentence jumps onto the stage and puts on a number badge so nobody forgets their spot in line!',
+          group: 'input',
+        },
+        {
+          id: 'qkv',
+          label: '2. Three Magic Badges',
+          sublabel: 'Question · Tag · Treasure',
+          x: 44,
+          y: 24,
+          detail: 'Each word holds up a Question (“Who helps me?”), a Name Tag (“Who I am”), and a Treasure Chest (“My meaning”).',
+          group: 'core',
+        },
+        {
+          id: 'scores',
+          label: '3. Flashlight Match!',
+          sublabel: 'Brightest Beams Win',
+          x: 52,
+          y: 74,
+          detail: 'Words shine their flashlights across the sentence! When a Question matches a Name Tag, the beam glows super bright!',
+          group: 'core',
+        },
+        {
+          id: 'output',
+          label: '4. Smart Story Meaning',
+          sublabel: 'Teamwork Complete!',
+          x: 84,
+          y: 48,
+          detail: 'Now every word understands the whole sentence—so “it” knows whether it means the puppy or the bouncy ball!',
+          group: 'output',
+        },
+      ],
+      connections: [
+        { from: 'tokens', to: 'qkv', label: 'Put on badges' },
+        { from: 'qkv', to: 'scores', label: 'Shine lights' },
+        { from: 'scores', to: 'output', label: 'Share meaning' },
+      ],
+    },
+  },
+  'ada-lovelace': {
+    rabbitHoles: [
+      'How Music Boxes & Jacquard Looms Work',
+      'Charles Babbage’s Giant Gear Machine',
+      'Alan Turing & Secret Codebreakers',
+      'Grace Hopper & the First Computer Bug (a Real Moth!)',
+    ],
+    keyFacts: [
+      {
+        label: 'Born In',
+        value: '1815 (London)',
+        detail: 'She grew up in the age of steam trains, horses, and candlelit libraries!',
+      },
+      {
+        label: 'Childhood Dream',
+        value: 'Flying Horse',
+        detail: 'At age 12, she sketched wings and steam gears to build a flying Pegasus!',
+      },
+      {
+        label: 'Big Invention',
+        value: 'First Code (1843)',
+        detail: 'Wrote the world’s very first published computer program for a gear machine.',
+      },
+      {
+        label: 'Big Idea',
+        value: 'Computer Music',
+        detail: 'Predicted that computers would one day compose music and art—not just do math!',
+      },
+    ],
+    illustration: {
+      title: 'Ada’s Magical Gear & Loom Machine',
+      caption: 'Tap each picture step to see how Ada turned paper cards with holes into the first computer program!',
+      visualTheme: 'portrait-constellation',
+      nodes: [
+        {
+          id: 'loom',
+          label: '1. Punched Paper Cards',
+          sublabel: 'Holes = Secret Code',
+          x: 18,
+          y: 48,
+          detail: 'Inspired by flower-weaving looms, paper cards with little holes tell the machine which levers to lift!',
+          group: 'input',
+        },
+        {
+          id: 'store',
+          label: '2. Number Cubbyholes',
+          sublabel: 'The Memory Store',
+          x: 45,
+          y: 24,
+          detail: 'Tall columns of spinning brass wheels remember numbers—just like cubbyholes in a classroom!',
+          group: 'core',
+        },
+        {
+          id: 'mill',
+          label: '3. The Gear Workshop',
+          sublabel: 'The Spinning Mill',
+          x: 52,
+          y: 74,
+          detail: 'Gears and levers click together to add, subtract, and repeat steps in a clever loop!',
+          group: 'core',
+        },
+        {
+          id: 'note-g',
+          label: '4. Music, Art & Puzzles',
+          sublabel: 'Ada’s Big Vision',
+          x: 84,
+          y: 48,
+          detail: 'By swapping numbers for musical notes or words, the machine becomes a true computer!',
+          group: 'output',
+        },
+      ],
+      connections: [
+        { from: 'loom', to: 'store', label: 'Pick cubbyhole' },
+        { from: 'loom', to: 'mill', label: 'Turn gears' },
+        { from: 'mill', to: 'note-g', label: 'Solve & create!' },
+      ],
+    },
+  },
+  'quantum-entanglement': {
+    rabbitHoles: [
+      'Schrödinger’s Curious Cat Puzzle',
+      'How Lasers & Rainbow Prisms Work',
+      'Quantum Computers & Super-Fast Puzzles',
+      'Albert Einstein’s Thought Experiments',
+    ],
+    keyFacts: [
+      {
+        label: 'Nickname',
+        value: 'Spooky Twins',
+        detail: 'Albert Einstein called it “spooky” because the twin particles match up from miles away!',
+      },
+      {
+        label: 'How They Act',
+        value: 'Spinning Coins',
+        detail: 'Both particles keep spinning in every possibility until you peek at one of them!',
+      },
+      {
+        label: 'Big Prize',
+        value: '2022 Nobel Prize',
+        detail: 'Three scientists won the world’s biggest physics medal for proving the twins are real!',
+      },
+      {
+        label: 'Cool Use',
+        value: 'Secret Codes',
+        detail: 'Used to build quantum computers and unhackable space messages!',
+      },
+    ],
+    illustration: {
+      title: 'The Adventure of the Quantum Twin Particles',
+      caption: 'Tap each step to follow the two glowing twin particles on their journey!',
+      visualTheme: 'orbital',
+      nodes: [
+        {
+          id: 'source',
+          label: '1. Magic Crystal Spark',
+          sublabel: 'Twins Are Born!',
+          x: 50,
+          y: 22,
+          detail: 'A special crystal splits a beam of light into two twin particles that share one connected heart!',
+          group: 'core',
+        },
+        {
+          id: 'alice',
+          label: '2. Alice’s Star Lab',
+          sublabel: 'Twin A Flies Left',
+          x: 18,
+          y: 62,
+          detail: 'Alice catches Twin A in her sunglasses detector and sees it land on Heads or Tails!',
+          group: 'input',
+        },
+        {
+          id: 'bob',
+          label: '3. Bob’s Moon Lab',
+          sublabel: 'Twin B Flies Right',
+          x: 82,
+          y: 62,
+          detail: 'Far away, Bob catches Twin B at the exact same moment in his detector!',
+          group: 'input',
+        },
+        {
+          id: 'coincidence',
+          label: '4. They Match Up!',
+          sublabel: 'Twin Magic Proven!',
+          x: 50,
+          y: 78,
+          detail: 'When Alice and Bob compare their notebooks, their twin particles matched way more often than any ordinary trick!',
+          group: 'output',
+        },
+      ],
+      connections: [
+        { from: 'source', to: 'alice', label: 'Twin A' },
+        { from: 'source', to: 'bob', label: 'Twin B' },
+        { from: 'alice', to: 'coincidence', label: 'Notebook A' },
+        { from: 'bob', to: 'coincidence', label: 'Notebook B' },
+      ],
+    },
+  },
+  'monetary-policy': {
+    rabbitHoles: [
+      'Why Shells & Gold Coins Were Used as Money',
+      'How a Neighborhood Bank Works',
+      'Why Ice Cream Used to Cost 5 Cents!',
+      'How Countries Trade Toys & Food',
+    ],
+    keyFacts: [
+      {
+        label: 'Cozy Goal',
+        value: '2% a Year',
+        detail: 'Just a tiny, steady bit of price growth keeps shops and jobs happy!',
+      },
+      {
+        label: 'Magic Dial',
+        value: 'Interest Rate',
+        detail: 'The bonus reward coins your piggy bank earns when you save money!',
+      },
+      {
+        label: 'Too Hot!',
+        value: 'Inflation',
+        detail: 'When too many coins chase too few toys, price tags zoom up fast!',
+      },
+      {
+        label: 'Best Goal',
+        value: 'Smooth Landing',
+        detail: 'Cooling down fast prices gently without bumping anyone’s job!',
+      },
+    ],
+    illustration: {
+      title: 'How the Town’s Piggy-Bank Dial Keeps Prices Steady',
+      caption: 'Tap each picture stop to see how the Central Bank cools down runaway price tags!',
+      visualTheme: 'equilibrium',
+      nodes: [
+        {
+          id: 'policy-rate',
+          label: '1. The Piggy-Bank Dial',
+          sublabel: 'Central Bank Referee',
+          x: 16,
+          y: 48,
+          detail: 'The Central Bank turns up the savings reward dial when town prices start getting too hot!',
+          group: 'input',
+        },
+        {
+          id: 'yield-curve',
+          label: '2. Piggy Banks Glow!',
+          sublabel: 'Saving Pays Extra',
+          x: 44,
+          y: 26,
+          detail: 'Neighborhood banks give extra bonus coins to savers, and big loans become pricier.',
+          group: 'core',
+        },
+        {
+          id: 'aggregate-demand',
+          label: '3. Calmer Shopping',
+          sublabel: 'No More Rush!',
+          x: 52,
+          y: 72,
+          detail: 'People save a little more for tomorrow instead of rushing to buy every cupcake today!',
+          group: 'core',
+        },
+        {
+          id: 'inflation',
+          label: '4. Happy Steady Prices',
+          sublabel: 'Cozy 2% Balance',
+          x: 84,
+          y: 48,
+          detail: 'Store price tags stop zooming up so fast, and everyone’s allowance stays strong!',
+          group: 'output',
+        },
+      ],
+      connections: [
+        { from: 'policy-rate', to: 'yield-curve', label: 'Turn dial' },
+        { from: 'yield-curve', to: 'aggregate-demand', label: 'Save more' },
+        { from: 'aggregate-demand', to: 'inflation', label: 'Cool prices' },
+      ],
+    },
+  },
+};
+
 export function buildPresetMicrosite(
   slug: string,
   level: ExpertiseLevel
 ): MicrositeData | null {
   const preset = PRESET_TOPICS.find((p) => p.slug === slug);
   if (!preset) return null;
-  const variant = preset.byLevel[level];
+  const variant = preset.byLevel[level] || preset.byLevel.novice;
+  const childExtras = level === 'child' ? CHILD_PRESET_EXTRAS[slug] : undefined;
   return {
     ...preset.base,
+    ...(childExtras || {}),
     level,
     ...variant,
   };

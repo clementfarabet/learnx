@@ -312,6 +312,7 @@ export const DynamicWidget: React.FC<Props> = ({ widget }) => {
                   max={events.length - 1}
                   step={1}
                   value={safeIdx}
+                  aria-label="Timeline milestone scrubber"
                   onChange={(e) => setActiveEventIdx(Number(e.target.value))}
                   className="w-full cursor-pointer"
                 />
@@ -425,6 +426,7 @@ export const DynamicWidget: React.FC<Props> = ({ widget }) => {
               max={100}
               step={5}
               value={systemImpulse}
+              aria-label="System perturbation input level"
               onChange={(e) => setSystemImpulse(Number(e.target.value))}
               className="w-full cursor-pointer"
             />
@@ -691,6 +693,7 @@ export const DynamicWidget: React.FC<Props> = ({ widget }) => {
                   max={p.max ?? 100}
                   step={step}
                   value={val}
+                  aria-label={`${p.label} parameter slider`}
                   onChange={(e) =>
                     setParamValues((prev) => ({
                       ...prev,
