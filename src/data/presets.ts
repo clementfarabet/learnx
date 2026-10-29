@@ -273,7 +273,7 @@ export const PRESET_TOPICS: PresetTopicVariants[] = [
           relevance: 'Details Key-Value head sharing for fast autoregressive decoding.',
         },
       ],
-      model: 'Curated + Gemini Interactive Engine',
+      model: 'Curated + AI Interactive Engine',
       grounded: true,
     },
     byLevel: {
@@ -348,7 +348,7 @@ export const PRESET_TOPICS: PresetTopicVariants[] = [
           },
           {
             heading: '3. Multi-Head Subspaces & Causal Masking',
-            body: 'Rather than performing one large attention calculation, the model splits vectors into h smaller heads. In decoder models like GPT or Gemini, a triangular causal mask sets future token scores to −∞ so tokens can only attend to past and present positions during training.',
+            body: 'Rather than performing one large attention calculation, the model splits vectors into h smaller heads. In autoregressive decoder LLMs, a triangular causal mask sets future token scores to −∞ so tokens can only attend to past and present positions during training.',
             keyTerm: 'Causal Masking',
           },
         ],
@@ -651,7 +651,7 @@ export const PRESET_TOPICS: PresetTopicVariants[] = [
           relevance: 'Scholarly analysis of Note G’s algorithm and symbolic computing vision.',
         },
       ],
-      model: 'Curated + Gemini Interactive Engine',
+      model: 'Curated + AI Interactive Engine',
       grounded: true,
     },
     byLevel: {
@@ -1017,7 +1017,7 @@ export const PRESET_TOPICS: PresetTopicVariants[] = [
           relevance: 'Reviews Clauser, Aspect, and Zeilinger’s experiments closing locality and detection loopholes.',
         },
       ],
-      model: 'Curated + Gemini Interactive Engine',
+      model: 'Curated + AI Interactive Engine',
       grounded: true,
     },
     byLevel: {
@@ -1383,7 +1383,7 @@ export const PRESET_TOPICS: PresetTopicVariants[] = [
           relevance: 'Standard 3-equation New Keynesian framework (Dynamic IS, NKPC, Taylor Rule).',
         },
       ],
-      model: 'Curated + Gemini Interactive Engine',
+      model: 'Curated + AI Interactive Engine',
       grounded: true,
     },
     byLevel: {

@@ -85,6 +85,7 @@ export interface LearnXTranslations {
     connectedTopics: string;
     primarySources: string;
     footerTagline: string;
+    disclaimer: string;
   };
   examples: ExampleTopicTranslation[];
 }
@@ -172,6 +173,8 @@ export const TRANSLATIONS: Record<LocaleCode, LearnXTranslations> = {
       connectedTopics: 'Connected Topics',
       primarySources: 'Primary Papers & References',
       footerTagline: 'LearnX · Adaptive Interactive Microsites (Novice to Pro)',
+      disclaimer:
+        'Disclaimer: These projects are built for fun — take all AI-generated results and syntheses with a grain of salt.',
     },
     examples: [
       {
@@ -314,6 +317,8 @@ export const TRANSLATIONS: Record<LocaleCode, LearnXTranslations> = {
       connectedTopics: 'Sujets Connexes',
       primarySources: 'Publications Primaires & Références',
       footerTagline: 'LearnX · Microsites Interactifs Adaptatifs (Novice à Expert)',
+      disclaimer:
+        'Avertissement : Ces projets sont créés pour le plaisir — prenez tous les résultats et synthèses générés par l’IA avec du recul.',
     },
     examples: [
       {
@@ -456,6 +461,8 @@ export const TRANSLATIONS: Record<LocaleCode, LearnXTranslations> = {
       connectedTopics: 'Verwandte Themen',
       primarySources: 'Primärliteratur & Quellen',
       footerTagline: 'LearnX · Adaptive Interaktive Microsites (Einsteiger bis Experte)',
+      disclaimer:
+        'Hinweis: Diese Projekte sind aus Freude am Experimentieren entstanden — betrachten Sie alle KI-generierten Ergebnisse mit einer gesunden Portion Skepsis.',
     },
     examples: [
       {
@@ -595,6 +602,8 @@ export const TRANSLATIONS: Record<LocaleCode, LearnXTranslations> = {
       connectedTopics: '关联主题探索',
       primarySources: '原始文献与参考资料',
       footerTagline: 'LearnX · 自适应交互式知识微站（从入门到专家）',
+      disclaimer:
+        '免责声明：本项目纯属兴趣之作 —— 所有 AI 生成的内容与模型仅供参考，请保持审慎思考。',
     },
     examples: [
       {
@@ -736,6 +745,8 @@ export const TRANSLATIONS: Record<LocaleCode, LearnXTranslations> = {
       connectedTopics: '関連トピック',
       primarySources: '主要論文・一次資料',
       footerTagline: 'LearnX · アダプティブ学習マイクロサイト（初級からプロまで）',
+      disclaimer:
+        '免責事項：これらのプロジェクトは楽しみのために作られたものです — AIによる生成結果はすべて参考程度にご覧ください。',
     },
     examples: [
       {

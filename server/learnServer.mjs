@@ -380,8 +380,7 @@ const server = http.createServer(async (req, res) => {
       JSON.stringify({
         ok: true,
         service: 'learnx-api',
-        model: PRIMARY_MODEL,
-        fallbackModel: FALLBACK_MODEL,
+        model: 'AI',
         cachedEntries: RESPONSE_CACHE.size,
         hasKey: Boolean(GEMINI_API_KEY),
       })
@@ -502,7 +501,7 @@ Generate the microsite JSON for "${query}" calibrated for ${level.toUpperCase()}
 
         const resultObj = JSON.parse(outputText);
         resultObj.level = level;
-        resultObj.model = interaction.model || usedModel;
+        resultObj.model = 'AI';
         resultObj.grounded = true;
 
         // Normalize entityType

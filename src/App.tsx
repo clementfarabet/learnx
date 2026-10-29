@@ -130,7 +130,7 @@ export function App() {
         return;
       }
 
-      // 3. Call live Gemini backend API (/learnx/api/learn)
+      // 3. Call live AI backend API (/learnx/api/learn)
       setIsLoading(true);
       setLoadingStage(
         t.status.synthesizing(trimmed, t.levels[targetLevel].label)
@@ -644,7 +644,7 @@ export function App() {
                   {loadingStage}
                 </span>
               </div>
-              <span className="kicker">Gemini</span>
+              <span className="kicker">AI</span>
             </div>
           )}
 
@@ -1007,12 +1007,20 @@ export function App() {
         className="border-t py-6 mt-12 text-xs"
         style={{ borderColor: 'var(--rule)', color: 'var(--ink-3)' }}
       >
-        <div className="max-w-6xl mx-auto px-5 sm:px-8 flex flex-wrap items-center justify-between gap-3">
-          <div>{t.microsite.footerTagline}</div>
-          <div className="flex items-center gap-3">
-            <a href="/" className="hover:underline">
-              learnandplay.ai
-            </a>
+        <div className="max-w-6xl mx-auto px-5 sm:px-8 space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>{t.microsite.footerTagline}</div>
+            <div className="flex items-center gap-3">
+              <a href="/" className="hover:underline">
+                learnandplay.ai
+              </a>
+            </div>
+          </div>
+          <div
+            className="text-[11px] italic"
+            style={{ color: 'var(--ink-3)' }}
+          >
+            {t.microsite.disclaimer}
           </div>
         </div>
       </footer>
