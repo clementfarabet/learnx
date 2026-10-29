@@ -53,9 +53,10 @@ export function App() {
 
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const queryContainerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    const handleClickOutside = (e: Event) => {
       if (
         queryContainerRef.current &&
         !queryContainerRef.current.contains(e.target as Node)
@@ -66,12 +67,15 @@ export function App() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setIsDropdownOpen(false);
+        inputRef.current?.blur();
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('pointerdown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside, { passive: true });
     document.addEventListener('keydown', handleKeyDown);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('pointerdown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
@@ -232,6 +236,7 @@ export function App() {
     const trimmed = queryInput.trim();
     if (!trimmed || isLoading) return;
     setIsDropdownOpen(false);
+    inputRef.current?.blur();
     setActiveTopicQuery(trimmed);
     generateMicrosite(trimmed, level, locale);
   };
@@ -239,6 +244,7 @@ export function App() {
   const handleSelectTopic = (topicText: string, presetSlug?: string) => {
     setQueryInput('');
     setIsDropdownOpen(false);
+    inputRef.current?.blur();
     setActiveTopicQuery(topicText);
     if (presetSlug) {
       const built = buildPresetMicrosite(presetSlug, level);
@@ -579,36 +585,46 @@ export function App() {
             {/* 1. Query Bar with Pre-populated Examples Dropdown */}
             <div ref={queryContainerRef} className="relative flex-1 min-w-0">
               <div
-                className="flex items-center rounded-full px-4 py-1.5 h-full"
+                className={`flex items-center rounded-full px-4 py-1.5 h-full transition-all focus-within:ring-2 focus-within:ring-[var(--accent)]/30 ${
+                  isDropdownOpen ? 'border-[var(--accent)]' : 'border-[var(--rule)]'
+                }`}
                 style={{
                   backgroundColor: 'var(--paper-2)',
                   border: isDropdownOpen
-                    ? '1px solid var(--ink-3)'
+                    ? '1px solid var(--accent)'
                     : '1px solid var(--rule)',
                 }}
               >
                 <input
+                  ref={inputRef}
                   type="text"
                   value={queryInput}
-                  onFocus={() => setIsDropdownOpen(true)}
                   onChange={(e) => {
                     setQueryInput(e.target.value);
-                    setIsDropdownOpen(true);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      setIsDropdownOpen(false);
+                      inputRef.current?.blur();
+                    }
                   }}
                   placeholder={t.landing.placeholder}
                   aria-label={t.landing.placeholder}
                   aria-expanded={isDropdownOpen}
                   aria-controls="learnx-examples-dropdown"
-                  className="w-full bg-transparent text-base focus:outline-none"
-                  style={{ color: 'var(--ink)' }}
+                  className="w-full bg-transparent text-base border-none shadow-none focus:outline-none"
+                  style={{
+                    color: 'var(--ink)',
+                    outline: 'none',
+                    boxShadow: 'none',
+                  }}
                 />
                 <button
                   type="button"
                   onClick={() => setIsDropdownOpen((open) => !open)}
                   aria-label="Toggle example topics menu"
                   title={t.dropdown.exampleTopics}
-                  className="ml-1 p-2 rounded-full cursor-pointer transition min-h-[44px] min-w-[44px] flex items-center justify-center"
-                  style={{ color: 'var(--ink-3)' }}
+                  className="ml-1 p-2 rounded-full cursor-pointer transition min-h-[44px] min-w-[44px] flex items-center justify-center text-[var(--ink-3)] hover:text-[var(--ink)]"
                 >
                   <ChevronDown
                     className={`w-4 h-4 transition-transform ${
@@ -619,7 +635,7 @@ export function App() {
                 <button
                   type="submit"
                   disabled={isLoading || !queryInput.trim()}
-                  className="ml-1.5 shrink-0 inline-flex items-center gap-1.5 px-4 py-2 min-h-[44px] rounded-full font-semibold text-xs sm:text-sm disabled:opacity-50 cursor-pointer"
+                  className="ml-1.5 shrink-0 inline-flex items-center gap-1.5 px-4 py-2 min-h-[44px] rounded-full font-semibold text-xs sm:text-sm disabled:opacity-50 cursor-pointer shadow-xs"
                   style={{
                     backgroundColor: 'var(--ink)',
                     color: 'var(--paper)',
@@ -677,6 +693,7 @@ export function App() {
                         onClick={() => {
                           const trimmed = queryInput.trim();
                           setIsDropdownOpen(false);
+                          inputRef.current?.blur();
                           setActiveTopicQuery(trimmed);
                           generateMicrosite(trimmed, level, locale);
                         }}
